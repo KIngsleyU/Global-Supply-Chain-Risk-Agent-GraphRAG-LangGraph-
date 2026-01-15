@@ -19,22 +19,39 @@ This project implements a **Global Supply Chain Risk Guardian** agent. When a "R
 
 The knowledge graph consists of three node types:
 
-- **Supplier**: Represents manufacturing companies with risk attributes
-- **Product**: Represents manufactured goods
-- **Location**: Represents geographical regions/cities
+- **Supplier**: Represents manufacturing companies with risk attributes (`name`, `risk_score`, `revenue`)
+- **Product**: Represents manufactured goods (`name`, `sku`, `price`)
+- **Location**: Represents geographical regions/cities (`name`, `country`)
 
 #### Relationships
 
-- `(Supplier)-[:MANUFACTURES]->(Product)`
-- `(Supplier)-[:LOCATED_AT]->(Location)`
+- `(Supplier)-[:MANUFACTURES]->(Product)` - Links suppliers to the products they manufacture
+- `(Supplier)-[:LOCATED_AT]->(Location)` - Links suppliers to their physical locations
 
 ### Implementation Approach
 
-I'm implementing this using **NetworkX** (in-memory graph) to simulate a graph database without requiring external infrastructure like Neo4j. This approach runs entirely in RAM, eliminating connection and Docker setup complexity while maintaining full graph traversal capabilities.
+The project uses **NetworkX** (in-memory directed graph) to simulate a graph database without requiring external infrastructure like Neo4j. This approach runs entirely in RAM, eliminating connection and Docker setup complexity while maintaining full graph traversal capabilities.
 
-## Data Models
+**Directed Graph Design**: The implementation uses `nx.DiGraph()` to ensure asymmetric relationships. For example, `Supplier → MANUFACTURES → Product` makes sense, but the reverse does not. This design choice prevents confusion in risk analysis during graph traversal.
 
-The core entities are defined as Python dataclasses in `schema.py`:
+## Project Structure
+
+```
+.
+├── schema.py          # ✅ Data Models (Nodes) - IMPLEMENTED
+├── graph_ops.py       # ✅ NetworkX Graph Operations - IMPLEMENTED
+├── vector_ops.py      # 🚧 ChromaDB Logic (Vector Search) - PLACEHOLDER
+├── agent.py           # 🚧 LangGraph Logic (Decision Making) - PLACEHOLDER
+├── main.py            # 📝 Entry Point - NEEDS REFACTORING
+├── requirements.txt   # ✅ Dependencies
+└── README.md          # Project documentation
+```
+
+## Components
+
+### schema.py
+
+Defines the core data models using Python dataclasses:
 
 ```python
 @dataclass
@@ -42,7 +59,6 @@ class Supplier:
     name: str
     risk_score: float
     revenue: float
-    # Unique ID helper for graph operations
     def __hash__(self):
         return hash(self.name)
 
@@ -58,82 +74,123 @@ class Location:
     country: str
 ```
 
-The `risk_score` property on the `Supplier` node enables direct risk assessment calculations during graph traversal.
+The `Supplier.__hash__()` method enables proper node identification in the graph structure.
 
-## Project Structure
+### graph_ops.py
 
+Implements the `SupplyChainGraph` class for managing the knowledge graph:
+
+**Key Features:**
+- Uses NetworkX `DiGraph()` for directed, asymmetric relationships
+- Supports adding nodes (Supplier, Product, Location) and edges with type labels
+- Provides methods for graph introspection
+
+**API:**
+- `SupplyChainGraph()` - Initialize an empty directed graph
+- `add_node(node)` - Add a node to the graph
+- `add_edge(source, target, edge_type)` - Add a directed edge with a type label
+- `get_graph()` - Retrieve the underlying NetworkX graph object
+- `get_nodes()` - Get a list of all nodes in the graph
+
+**Example Usage:**
+```python
+from graph_ops import SupplyChainGraph
+from schema import Supplier, Product, Location
+
+graph = SupplyChainGraph()
+supplier = Supplier("Acme Corp", risk_score=0.3, revenue=1000000)
+product = Product("Widget A", sku="WID-A001", price=99.99)
+
+graph.add_node(supplier)
+graph.add_node(product)
+graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 ```
-.
-├── schema.py          # ✅ Data Models (Nodes) - IMPLEMENTED
-├── graph_ops.py       # 🚧 NetworkX Logic (Graph Operations) - PLACEHOLDER
-├── vector_ops.py      # 🚧 ChromaDB Logic (Vector Search) - PLACEHOLDER
-├── agent.py           # 🚧 LangGraph Logic (Decision Making) - PLACEHOLDER
-├── main.py            # 📝 Entry Point - NEEDS REFACTORING
-├── requirements.txt   # ✅ Dependencies
-└── README.md          # Project documentation
-```
 
-### File Status
+### vector_ops.py
 
-- **schema.py**: ✅ Fully implemented with all three node classes (`Supplier`, `Product`, `Location`)
-- **graph_ops.py**: Contains only placeholder comment, NetworkX implementation needed
-- **vector_ops.py**: Contains only placeholder comment, ChromaDB integration needed
-- **agent.py**: Contains only placeholder comment, LangGraph agent implementation needed
-- **main.py**: Currently contains duplicate dataclass definitions that should import from `schema.py`
+*Placeholder for ChromaDB integration - semantic search functionality for risk event queries*
+
+### agent.py
+
+*Placeholder for LangGraph agent implementation - orchestration and decision-making logic*
+
+### main.py
+
+*Currently contains duplicate dataclass definitions - should import from `schema.py` instead*
 
 ## Installation
 
-1. Clone this repository
-2. Install dependencies:
+### Prerequisites
 
+- Python 3.8 or higher
+- pip package manager
+
+### Setup
+
+1. Clone this repository:
+```bash
+git clone <repository-url>
+cd Global-Supply-Chain-Risk-Agent-GraphRAG-LangGraph-
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Dependencies
 
-- `networkx` - Graph database simulation
+- `networkx` - Graph database simulation and algorithms
 - `chromadb` - Vector database for semantic search
-- `faker` - Synthetic data generation
-- `langchain` - LLM framework
-- `langgraph` - Agent orchestration
-- `matplotlib` - Visualization
-- `scipy` - Scientific computing
+- `faker` - Synthetic data generation for testing
+- `langchain` - LLM framework integration
+- `langgraph` - Agent orchestration and state management
+- `matplotlib` - Graph visualization
+- `scipy` - Scientific computing utilities
 
 ## Current Status
 
 ### ✅ Phase 1: Schema Blueprint - COMPLETE
 - Graph schema defined (nodes and edges)
-- Data models fully implemented in `schema.py`:
-  - `Supplier` class with `name`, `risk_score`, `revenue`, and `__hash__` method
-  - `Product` class with `name`, `sku`, `price`
-  - `Location` class with `name`, `country`
+- Data models fully implemented in `schema.py`
+- All three node classes with proper type hints and hash methods
 
-### 🚧 Phase 2: Graph Infrastructure - PLANNED
-- `graph_ops.py` - Placeholder (NetworkX graph operations)
-- NetworkX graph container and traversal logic needed
+### ✅ Phase 2: Graph Infrastructure - COMPLETE
+- `SupplyChainGraph` class implemented in `graph_ops.py`
+- NetworkX directed graph container operational
+- Node and edge addition methods functional
+- Graph introspection methods available
 
 ### 🚧 Phase 3: Vector Operations - PLANNED
 - `vector_ops.py` - Placeholder (ChromaDB integration)
-- Semantic search functionality needed
+- Semantic search functionality for risk events needed
+- Vector embedding and retrieval logic pending
 
 ### 🚧 Phase 4: Agent Logic - PLANNED
 - `agent.py` - Placeholder (LangGraph agent)
 - Decision-making and orchestration logic needed
+- Risk report generation workflow pending
 
 ### 📝 Phase 5: Entry Point - NEEDS REFACTORING
-- `main.py` - Currently contains duplicate dataclass definitions
-- Should import from `schema.py` instead of redefining classes
+- `main.py` - Contains duplicate dataclass definitions
+- Should import from `schema.py` to avoid code duplication
+- Main execution flow and example usage needed
 
-## Usage
+## Development Roadmap
 
-*Usage instructions will be added once core functionality is implemented.*
+- [ ] Complete vector operations implementation (ChromaDB)
+- [ ] Implement LangGraph agent with risk assessment logic
+- [ ] Refactor `main.py` to use proper imports
+- [ ] Add graph traversal methods for risk analysis
+- [ ] Implement risk report generation
+- [ ] Add unit tests
+- [ ] Create example usage scripts
+- [ ] Add graph visualization capabilities
 
-## Development Notes
+## Contributing
 
-- `schema.py` is the source of truth for data models
-- `main.py` needs to be refactored to import from `schema.py` to avoid code duplication
+*Contributing guidelines will be added as the project matures.*
 
 ## License
 
-[Your License Here]
+*License information to be added.*
