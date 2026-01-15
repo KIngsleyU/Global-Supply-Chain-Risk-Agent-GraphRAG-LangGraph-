@@ -1,0 +1,7 @@
+networkx
+chromadb
+faker
+langchain
+langgraph
+matplotlib
+scipy
