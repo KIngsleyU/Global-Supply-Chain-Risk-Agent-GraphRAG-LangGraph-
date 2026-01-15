@@ -83,26 +83,58 @@ Implements the `SupplyChainGraph` class for managing the knowledge graph:
 **Key Features:**
 - Uses NetworkX `DiGraph()` for directed, asymmetric relationships
 - Supports adding nodes (Supplier, Product, Location) and edges with type labels
-- Provides methods for graph introspection
+- Provides comprehensive data generation methods for synthetic supply chain data
+- Maintains internal state for locations, suppliers, and products
+- Uses Faker library for realistic data generation
 
 **API:**
-- `SupplyChainGraph()` - Initialize an empty directed graph
+- `SupplyChainGraph()` - Initialize an empty directed graph with state tracking
 - `add_node(node)` - Add a node to the graph
 - `add_edge(source, target, edge_type)` - Add a directed edge with a type label
 - `get_graph()` - Retrieve the underlying NetworkX graph object
 - `get_nodes()` - Get a list of all nodes in the graph
+- `generate_locations()` - Generate 20-30 diverse supply chain locations (ports, warehouses, manufacturing facilities)
+- `generate_suppliers(locations)` - Generate 1-3 suppliers per location
+- `generate_products(suppliers)` - Generate 1-3 products per supplier
+- `generate_data()` - Orchestrate full data generation pipeline
+- `get_locations()` - Retrieve generated locations list
+- `get_suppliers()` - Retrieve generated suppliers list
+- `get_products()` - Retrieve generated products list
+
+**Data Generation Details:**
+- **Locations**: Generates 20-30 locations including ports (e.g., "Port of Shanghai"), warehouses (e.g., "Hamburg Warehouse"), and manufacturing facilities (e.g., "Shenzhen Manufacturing Facility")
+- **Suppliers**: 1-3 suppliers per location with random risk scores (0-1) and revenue ($100K-$10M)
+- **Products**: 1-3 products per supplier with unique SKUs and prices ($100-$1,000)
+- All numeric values are rounded to 2 decimal places for consistency
 
 **Example Usage:**
 ```python
 from graph_ops import SupplyChainGraph
+
+# Create graph instance
+graph = SupplyChainGraph()
+
+# Generate complete supply chain data
+graph.generate_data()
+# Prints: "Generated X locations, Y suppliers, Z products"
+
+# Access the graph or individual collections
+nx_graph = graph.get_graph()
+locations = graph.get_locations()
+suppliers = graph.get_suppliers()
+products = graph.get_products()
+
+# Or manually add nodes/edges
 from schema import Supplier, Product, Location
 
-graph = SupplyChainGraph()
-supplier = Supplier("Acme Corp", risk_score=0.3, revenue=1000000)
-product = Product("Widget A", sku="WID-A001", price=99.99)
+supplier = Supplier(name="Acme Corp", risk_score=0.3, revenue=1000000)
+product = Product(name="Widget A", sku="WID-A001", price=99.99)
+location = Location(name="Port of Los Angeles", country="United States")
 
 graph.add_node(supplier)
 graph.add_node(product)
+graph.add_node(location)
+graph.add_edge(supplier, location, edge_type="LOCATED_AT")
 graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 ```
 
@@ -160,6 +192,12 @@ pip install -r requirements.txt
 - NetworkX directed graph container operational
 - Node and edge addition methods functional
 - Graph introspection methods available
+- Synthetic data generation pipeline complete:
+  - `generate_locations()` - Creates 20-30 diverse supply chain locations
+  - `generate_suppliers()` - Creates 1-3 suppliers per location with realistic attributes
+  - `generate_products()` - Creates 1-3 products per supplier
+  - `generate_data()` - Orchestrates full data generation workflow
+- Helper methods for accessing generated data (`get_locations()`, `get_suppliers()`, `get_products()`)
 
 ### 🚧 Phase 3: Vector Operations - PLANNED
 - `vector_ops.py` - Placeholder (ChromaDB integration)
@@ -178,14 +216,74 @@ pip install -r requirements.txt
 
 ## Development Roadmap
 
+- [x] Graph infrastructure and data generation (Phase 2)
 - [ ] Complete vector operations implementation (ChromaDB)
 - [ ] Implement LangGraph agent with risk assessment logic
-- [ ] Refactor `main.py` to use proper imports
-- [ ] Add graph traversal methods for risk analysis
+- [ ] Refactor `main.py` to use proper imports and create working entry point
+- [ ] Add graph traversal methods for risk analysis:
+  - Find suppliers by location
+  - Find products by supplier
+  - Calculate risk propagation through supply chain
 - [ ] Implement risk report generation
-- [ ] Add unit tests
-- [ ] Create example usage scripts
-- [ ] Add graph visualization capabilities
+- [ ] Add unit tests for graph operations and data generation
+- [ ] Create example usage scripts demonstrating risk analysis workflows
+- [ ] Add graph visualization capabilities using matplotlib/NetworkX
+- [ ] Add query methods for finding affected entities during risk events
+
+## Usage
+
+### Basic Example: Generate Supply Chain Data
+
+```python
+from graph_ops import SupplyChainGraph
+
+# Initialize the graph
+graph = SupplyChainGraph()
+
+# Generate complete supply chain network
+graph.generate_data()
+# Output: "Generated 25 locations, 48 suppliers, 92 products"
+
+# Access the NetworkX graph for analysis
+nx_graph = graph.get_graph()
+print(f"Total nodes: {nx_graph.number_of_nodes()}")
+print(f"Total edges: {nx_graph.number_of_edges()}")
+
+# Access individual collections
+locations = graph.get_locations()
+suppliers = graph.get_suppliers()
+products = graph.get_products()
+
+# Example: Find suppliers at a specific location
+for supplier in suppliers:
+    for neighbor in nx_graph.neighbors(supplier):
+        if isinstance(neighbor, Location):
+            if neighbor.name == "Port of Shanghai":
+                print(f"Supplier {supplier.name} is located at {neighbor.name}")
+```
+
+### Example: Manual Graph Construction
+
+```python
+from graph_ops import SupplyChainGraph
+from schema import Supplier, Product, Location
+
+graph = SupplyChainGraph()
+
+# Create nodes
+location = Location(name="Port of Rotterdam", country="Netherlands")
+supplier = Supplier(name="Global Tech Industries", risk_score=0.45, revenue=5000000)
+product = Product(name="Advanced Sensor Array", sku="ASA-2024-001", price=750.00)
+
+# Add to graph
+graph.add_node(location)
+graph.add_node(supplier)
+graph.add_node(product)
+
+# Create relationships
+graph.add_edge(supplier, location, edge_type="LOCATED_AT")
+graph.add_edge(supplier, product, edge_type="MANUFACTURES")
+```
 
 ## Contributing
 
