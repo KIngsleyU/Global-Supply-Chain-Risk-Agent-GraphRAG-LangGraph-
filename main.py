@@ -1,21 +1,12 @@
 # The Entry Point
 
-from dataclasses import dataclass
+from graph_ops import SupplyChainGraph
+from vector_ops import ProductVectorStore
 
-@dataclass
-class Supplier:
-    name: str
-    risk_score: float
-    revenue: float
+graph = SupplyChainGraph()
+vector_store = ProductVectorStore()
 
-@dataclass
-class Product:
-    name: str
-    sku: str
-    price: float
+graph.generate_data()
+vector_store.add_products(graph.get_products())
 
-@dataclass
-class Location:
-    name: str
-    country: str
-    
+print(vector_store.get_products("medical equipment"))

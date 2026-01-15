@@ -40,9 +40,9 @@ The project uses **NetworkX** (in-memory directed graph) to simulate a graph dat
 .
 ├── schema.py          # ✅ Data Models (Nodes) - IMPLEMENTED
 ├── graph_ops.py       # ✅ NetworkX Graph Operations - IMPLEMENTED
-├── vector_ops.py      # 🚧 ChromaDB Logic (Vector Search) - PLACEHOLDER
+├── vector_ops.py      # ✅ ChromaDB Logic (Vector Search) - IMPLEMENTED
 ├── agent.py           # 🚧 LangGraph Logic (Decision Making) - PLACEHOLDER
-├── main.py            # 📝 Entry Point - NEEDS REFACTORING
+├── main.py            # ✅ Entry Point - WORKING
 ├── requirements.txt   # ✅ Dependencies
 └── README.md          # Project documentation
 ```
@@ -74,7 +74,12 @@ class Location:
     country: str
 ```
 
-The `Supplier.__hash__()` method enables proper node identification in the graph structure.
+**Key Features:**
+- All three node classes implement `__hash__()` methods for NetworkX compatibility:
+  - `Supplier`: Uses `name` as unique identifier
+  - `Product`: Uses `sku` as unique identifier
+  - `Location`: Uses `(name, country)` tuple for uniqueness
+- Module-level docstring provides comprehensive documentation
 
 ### graph_ops.py
 
@@ -140,7 +145,49 @@ graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 
 ### vector_ops.py
 
-*Placeholder for ChromaDB integration - semantic search functionality for risk event queries*
+Implements the `ProductVectorStore` class for semantic product search using ChromaDB:
+
+**Key Features:**
+- Uses ChromaDB `EphemeralClient()` for in-memory operation (consistent with NetworkX approach)
+- Indexes products by their names for semantic search
+- Enables natural language queries to find relevant products
+- Stores SKU and price in metadata for retrieval
+
+**API:**
+- `ProductVectorStore()` - Initialize an in-memory vector store
+- `add_products(products)` - Index a list of Product objects
+- `get_products(query, k)` - Semantic search for products matching a query (default: top 5 results)
+- `get_all_products(ids)` - Retrieve products by their SKU IDs
+- `delete_all_products(ids)` - Remove products from the collection by SKU
+
+**Design Decisions:**
+- Product names are embedded (semantically meaningful text like "Surgical Mask", "Hydraulic Pump")
+- SKUs are stored in metadata (numeric identifiers with no semantic meaning)
+- In-memory storage matches project philosophy of running entirely in RAM
+
+**Example Usage:**
+```python
+from vector_ops import ProductVectorStore
+from graph_ops import SupplyChainGraph
+
+# Create vector store
+vector_store = ProductVectorStore()
+
+# Generate graph and products
+graph = SupplyChainGraph()
+graph.generate_data()
+
+# Index products for semantic search
+vector_store.add_products(graph.get_products())
+# Output: "Indexed X products in ChromaDB."
+
+# Search for products semantically
+results = vector_store.get_products("medical equipment", k=5)
+# Returns top 5 products semantically similar to "medical equipment"
+
+# Get specific products by SKU
+products = vector_store.get_all_products(["1234", "5678"])
+```
 
 ### agent.py
 
@@ -148,7 +195,12 @@ graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 
 ### main.py
 
-*Currently contains duplicate dataclass definitions - should import from `schema.py` instead*
+Working entry point that demonstrates the integration of graph operations and vector search:
+
+- Creates a `SupplyChainGraph` instance and generates synthetic supply chain data
+- Creates a `ProductVectorStore` instance and indexes the generated products
+- Demonstrates semantic search by querying for "medical equipment"
+- Shows the complete workflow from graph generation to vector search
 
 ## Installation
 
@@ -184,8 +236,11 @@ pip install -r requirements.txt
 
 ### ✅ Phase 1: Schema Blueprint - COMPLETE
 - Graph schema defined (nodes and edges)
-- Data models fully implemented in `schema.py`
-- All three node classes with proper type hints and hash methods
+- Data models fully implemented in `schema.py` with module-level docstring
+- All three node classes with proper type hints and hash methods:
+  - `Supplier.__hash__()` uses name
+  - `Product.__hash__()` uses SKU
+  - `Location.__hash__()` uses (name, country) tuple
 
 ### ✅ Phase 2: Graph Infrastructure - COMPLETE
 - `SupplyChainGraph` class implemented in `graph_ops.py`
@@ -199,27 +254,32 @@ pip install -r requirements.txt
   - `generate_data()` - Orchestrates full data generation workflow
 - Helper methods for accessing generated data (`get_locations()`, `get_suppliers()`, `get_products()`)
 
-### 🚧 Phase 3: Vector Operations - PLANNED
-- `vector_ops.py` - Placeholder (ChromaDB integration)
-- Semantic search functionality for risk events needed
-- Vector embedding and retrieval logic pending
+### ✅ Phase 3: Vector Operations - COMPLETE
+- `ProductVectorStore` class fully implemented in `vector_ops.py` with module-level docstring
+- ChromaDB EphemeralClient integration for in-memory vector storage
+- Product indexing by name for semantic search
+- Semantic search functionality: `get_products(query, k)` finds products by natural language
+- Direct product retrieval: `get_all_products(ids)` retrieves by SKU
+- Product deletion support: `delete_all_products(ids)`
+- Metadata storage (SKU, price) alongside embeddings
 
 ### 🚧 Phase 4: Agent Logic - PLANNED
 - `agent.py` - Placeholder (LangGraph agent)
 - Decision-making and orchestration logic needed
 - Risk report generation workflow pending
 
-### 📝 Phase 5: Entry Point - NEEDS REFACTORING
-- `main.py` - Contains duplicate dataclass definitions
-- Should import from `schema.py` to avoid code duplication
-- Main execution flow and example usage needed
+### ✅ Phase 5: Entry Point - COMPLETE
+- `main.py` - Working entry point demonstrating full workflow
+- Integrates graph generation and vector indexing
+- Demonstrates semantic search functionality
+- No longer has duplicate code - uses proper imports
 
 ## Development Roadmap
 
 - [x] Graph infrastructure and data generation (Phase 2)
-- [ ] Complete vector operations implementation (ChromaDB)
-- [ ] Implement LangGraph agent with risk assessment logic
-- [ ] Refactor `main.py` to use proper imports and create working entry point
+- [x] Complete vector operations implementation (ChromaDB) - Phase 3
+- [x] Working entry point demonstrating integration (Phase 5)
+- [ ] Implement LangGraph agent with risk assessment logic (Phase 4)
 - [ ] Add graph traversal methods for risk analysis:
   - Find suppliers by location
   - Find products by supplier
@@ -260,6 +320,31 @@ for supplier in suppliers:
         if isinstance(neighbor, Location):
             if neighbor.name == "Port of Shanghai":
                 print(f"Supplier {supplier.name} is located at {neighbor.name}")
+```
+
+### Example: Complete Workflow (Graph + Vector Search)
+
+```python
+from graph_ops import SupplyChainGraph
+from vector_ops import ProductVectorStore
+
+# Initialize components
+graph = SupplyChainGraph()
+vector_store = ProductVectorStore()
+
+# Generate supply chain data
+graph.generate_data()
+# Output: "Generated 25 locations, 48 suppliers, 92 products"
+
+# Index products for semantic search
+products = graph.get_products()
+vector_store.add_products(products)
+# Output: "Indexed 92 products in ChromaDB."
+
+# Perform semantic search
+results = vector_store.get_products("medical equipment", k=5)
+for product in results:
+    print(f"{product.name} (SKU: {product.sku}, Price: ${product.price})")
 ```
 
 ### Example: Manual Graph Construction
