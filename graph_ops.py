@@ -1,51 +1,33 @@
 # NetworkX Logic (The World)
-
 """
-my plan implementation for this file
+Graph Operations Module for Supply Chain Risk Analysis
 
-You are absolutely right to use nx.DiGraph() (Directed Graph). In our supply chain, relationships are asymmetric:
+This module provides the core graph infrastructure for modeling and analyzing global supply chains
+using NetworkX. It implements a knowledge graph representation where suppliers, products, and
+locations are nodes connected by directed edges representing business relationships.
 
-Supplier → MANUFACTURES → Product makes sense.
+The SupplyChainGraph class enables:
+- Creation and management of a directed graph (DiGraph) to model asymmetric supply chain relationships
+- Synthetic data generation for testing and demonstration purposes
+- Graph traversal and query operations for risk analysis
 
-Product → MANUFACTURES → Supplier does not.
+Key Features:
+- Directed graph structure ensures proper modeling of asymmetric relationships:
+  * Supplier → MANUFACTURES → Product (one-way relationship)
+  * Supplier → LOCATED_AT → Location (one-way relationship)
+- Comprehensive data generation pipeline that creates realistic supply chain networks:
+  * 20-30 diverse locations (ports, warehouses, manufacturing facilities)
+  * 1-3 suppliers per location with risk scores and revenue data
+  * 1-3 products per supplier with SKUs and pricing
+- State management with helper methods to access generated entities
 
-If we used a standard nx.Graph() (Undirected), the system would treat those relationships as two-way streets, which would confuse our risk analysis later.
-
-💻 Step 2: Initialize the Graph
-
-Now, let's write the code for graph_ops.py. We need to:
-
-Import networkx.
-
-Import our node classes from schema.
-
-Initialize the graph.
-
-The code for graph_ops.py that includes a class (let's call it SupplyChainGraph) and an __init__ method that sets up the self.graph using nx.DiGraph()
-"""
-
-"""
-next steps plan implementation for this file
-
-Generating the Synthetic World
-
-Now, let's write the generate_data function inside graph_ops.py.
-
-We need to use the Faker library to create realistic dummy data. We will need to generate three layers of data in this specific order:
-
-Locations: Create 5-10 random locations (e.g., "Port of Shanghai", "Hamburg Warehouse").
-
-Suppliers: Create ~20 suppliers. For each one, pick a random Location from the list you just made and add the LOCATED_AT edge.
-
-Products: Create ~50 products. For each one, pick a random Supplier and add the MANUFACTURES edge.
-
-The Challenge: Can you write the generate_data(graph_instance) function?
-
-Hint: You'll need import random and from faker import Faker.
-
-Hint: Remember to instantiate the classes (Location(...), Supplier(...)) before adding them to the graph.
-
-Give it a try! Don't worry about syntax errors; we'll fix them together.
+Example:
+    >>> from graph_ops import SupplyChainGraph
+    >>> graph = SupplyChainGraph()
+    >>> graph.generate_data()
+    Generated 25 locations, 48 suppliers, 92 products
+    >>> nx_graph = graph.get_graph()
+    >>> locations = graph.get_locations()
 """
 
 import random
