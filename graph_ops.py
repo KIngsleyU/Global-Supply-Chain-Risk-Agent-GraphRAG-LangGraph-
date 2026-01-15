@@ -197,9 +197,12 @@ class SupplyChainGraph:
         for supplier in suppliers:
             # generate 1-3 products for each supplier
             for _ in range(random.randint(1, 3)):
+                # Use Faker's unique to ensure SKUs are unique
+                sku = str(self.faker.unique.random_int(min=1000, max=99999))
+                
                 product = Product(
                     name=self.faker.bs().title(), # 'bs' gives catchy product-like names
-                    sku=str(random.randint(1000, 9999)),
+                    sku=sku,
                     price=round(random.uniform(100, 1000), 2))
                 self.add_node(product) # type: Product ignore
                 self.add_edge(supplier, product, "MANUFACTURES") # type: Product ignore
