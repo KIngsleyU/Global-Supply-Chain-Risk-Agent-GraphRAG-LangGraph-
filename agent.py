@@ -1,37 +1,43 @@
 # LangGraph Logic (The Decision Maker)
 
 """
-My plan implementation for this file
+LangGraph Agent Module for Supply Chain Risk Analysis
 
-You correctly identified the flow: Start (Input) → The Messy Middle (Intermediate Steps) → The End (Output).
+This module implements an autonomous agent using LangGraph that combines graph traversal
+and vector search to analyze supply chain risks. The agent uses a message-based conversation
+flow to answer natural language queries about supply chain entities and relationships.
 
-In LangGraph code, we typically implement this slightly differently to make it easier to manage. Instead of a key literally named intermediate_steps, we usually use a key called messages.
+Architecture:
+- AgentState: TypedDict with messages field using add_messages reducer for conversation history
+- Chatbot Node: Invokes LLM with bound tools to process user queries
+- Tools Node: Executes function calls using LangGraph's pre-built ToolNode
+- Conditional Routing: Routes between chatbot and tools based on tool call detection
 
-This list holds the entire conversation history: User input, AI reasoning, Tool calls, Tool outputs, and the Final Answer.
+Tools:
+- retrieve_product_info(query): Semantic product search using ChromaDB vector store
+- explore_graph_connections(node_name): Graph traversal to find connected nodes via NetworkX
 
-We use a special "reducer" called add_messages so that when a node returns data, it appends to this list rather than deleting the old history.
+LLM Configuration:
+- Uses OpenRouter API with GPT-OSS 120B free model
+- Requires OPENROUTER_API_KEY environment variable
+- Model: openai/gpt-oss-120b:free
 
-💻 Step 5: The Agent Logic (agent.py)
+Initialization:
+- Automatically generates synthetic supply chain data on module import
+- Initializes graph with 20-30 locations, suppliers, and products
+- Indexes all products in the vector store for semantic search
 
-Let's start writing agent.py.
-
-We need to:
-
-Define the AgentState.
-
-Initialize our Tools (the Graph search and Vector search functions we built earlier).
-
-Bind the LLM to these tools.
-
-The Challenge:
-
-Can you write the code to imports the necessary libraries and define the AgentState class?
-
-Hint: You will need TypedDict and Annotated from typing.
-
-Hint: You will need add_messages from langgraph.graph.message.
-
-Give it a try!
+Example:
+    >>> from agent import agent
+    >>> from langchain_core.messages import HumanMessage
+    >>> 
+    >>> result = agent.invoke({
+    ...     "messages": [HumanMessage(content="What suppliers are in China?")]
+    ... })
+    >>> 
+    >>> for message in result["messages"]:
+    ...     if hasattr(message, 'content') and message.content:
+    ...         print(message.content)
 """
 
 
