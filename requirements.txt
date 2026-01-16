@@ -2,6 +2,8 @@ networkx
 chromadb
 faker
 langchain
+langchain-openai
 langgraph
 matplotlib
 scipy
+python-dotenv

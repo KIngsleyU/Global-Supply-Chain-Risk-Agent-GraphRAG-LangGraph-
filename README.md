@@ -41,7 +41,7 @@ The project uses **NetworkX** (in-memory directed graph) to simulate a graph dat
 ├── schema.py          # ✅ Data Models (Nodes) - IMPLEMENTED
 ├── graph_ops.py       # ✅ NetworkX Graph Operations - IMPLEMENTED
 ├── vector_ops.py      # ✅ ChromaDB Logic (Vector Search) - IMPLEMENTED
-├── agent.py           # 🚧 LangGraph Logic (Decision Making) - PLACEHOLDER
+├── agent.py           # ✅ LangGraph Agent - IMPLEMENTED
 ├── main.py            # ✅ Entry Point - WORKING
 ├── requirements.txt   # ✅ Dependencies
 └── README.md          # Project documentation
@@ -75,6 +75,7 @@ class Location:
 ```
 
 **Key Features:**
+
 - All three node classes implement `__hash__()` methods for NetworkX compatibility:
   - `Supplier`: Uses `name` as unique identifier
   - `Product`: Uses `sku` as unique identifier
@@ -86,6 +87,7 @@ class Location:
 Implements the `SupplyChainGraph` class for managing the knowledge graph:
 
 **Key Features:**
+
 - Uses NetworkX `DiGraph()` for directed, asymmetric relationships
 - Supports adding nodes (Supplier, Product, Location) and edges with type labels
 - Provides comprehensive data generation methods for synthetic supply chain data
@@ -93,26 +95,30 @@ Implements the `SupplyChainGraph` class for managing the knowledge graph:
 - Uses Faker library for realistic data generation
 
 **API:**
+
 - `SupplyChainGraph()` - Initialize an empty directed graph with state tracking
 - `add_node(node)` - Add a node to the graph
 - `add_edge(source, target, edge_type)` - Add a directed edge with a type label
 - `get_graph()` - Retrieve the underlying NetworkX graph object
 - `get_nodes()` - Get a list of all nodes in the graph
+- `get_node_by_name(name)` - Find a node by its name attribute (returns node object or None)
 - `generate_locations()` - Generate 20-30 diverse supply chain locations (ports, warehouses, manufacturing facilities)
 - `generate_suppliers(locations)` - Generate 1-3 suppliers per location
-- `generate_products(suppliers)` - Generate 1-3 products per supplier
+- `generate_products(suppliers)` - Generate 1-3 products per supplier with unique SKUs
 - `generate_data()` - Orchestrate full data generation pipeline
 - `get_locations()` - Retrieve generated locations list
 - `get_suppliers()` - Retrieve generated suppliers list
 - `get_products()` - Retrieve generated products list
 
 **Data Generation Details:**
+
 - **Locations**: Generates 20-30 locations including ports (e.g., "Port of Shanghai"), warehouses (e.g., "Hamburg Warehouse"), and manufacturing facilities (e.g., "Shenzhen Manufacturing Facility")
 - **Suppliers**: 1-3 suppliers per location with random risk scores (0-1) and revenue ($100K-$10M)
 - **Products**: 1-3 products per supplier with unique SKUs and prices ($100-$1,000)
 - All numeric values are rounded to 2 decimal places for consistency
 
 **Example Usage:**
+
 ```python
 from graph_ops import SupplyChainGraph
 
@@ -148,12 +154,14 @@ graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 Implements the `ProductVectorStore` class for semantic product search using ChromaDB:
 
 **Key Features:**
+
 - Uses ChromaDB `EphemeralClient()` for in-memory operation (consistent with NetworkX approach)
 - Indexes products by their names for semantic search
 - Enables natural language queries to find relevant products
 - Stores SKU and price in metadata for retrieval
 
 **API:**
+
 - `ProductVectorStore()` - Initialize an in-memory vector store
 - `add_products(products)` - Index a list of Product objects
 - `get_products(query, k)` - Semantic search for products matching a query (default: top 5 results)
@@ -161,11 +169,13 @@ Implements the `ProductVectorStore` class for semantic product search using Chro
 - `delete_all_products(ids)` - Remove products from the collection by SKU
 
 **Design Decisions:**
+
 - Product names are embedded (semantically meaningful text like "Surgical Mask", "Hydraulic Pump")
 - SKUs are stored in metadata (numeric identifiers with no semantic meaning)
 - In-memory storage matches project philosophy of running entirely in RAM
 
 **Example Usage:**
+
 ```python
 from vector_ops import ProductVectorStore
 from graph_ops import SupplyChainGraph
@@ -191,7 +201,49 @@ products = vector_store.get_all_products(["1234", "5678"])
 
 ### agent.py
 
-*Placeholder for LangGraph agent implementation - orchestration and decision-making logic*
+Implements the LangGraph agent for supply chain risk analysis using graph traversal and vector search:
+
+**Key Features:**
+
+- Uses LangGraph's `StateGraph` with `AgentState` for message-based conversation flow
+- Integrates with OpenRouter API for free LLM access (GPT-OSS 120B free model)
+- Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
+- Auto-initializes graph and vector store with synthetic data on import
+
+**Tools Implemented:**
+
+- `retrieve_product_info(query)` - Semantic product search using vector store
+- `explore_graph_connections(node_name)` - Graph traversal to find connected nodes using NetworkX
+
+**Architecture:**
+
+- **AgentState**: TypedDict with `messages` field using `add_messages` reducer
+- **Chatbot Node**: Calls LLM with tools bound, handles conversation flow
+- **Tools Node**: Uses LangGraph's pre-built `ToolNode` to execute function calls
+- **Conditional Edges**: Routes between chatbot and tools based on tool calls
+
+**LLM Configuration:**
+
+- Uses OpenRouter API with GPT-OSS 120B free model
+- Requires `OPENROUTER_API_KEY` environment variable
+- Model: `openai/gpt-oss-120b:free`
+
+**Example Usage:**
+
+```python
+from agent import agent
+from langchain_core.messages import HumanMessage
+
+# Agent is auto-initialized with data
+result = agent.invoke({
+    "messages": [HumanMessage(content="What suppliers are in China?")]
+})
+
+# Access the final response
+for message in result["messages"]:
+    if hasattr(message, 'content') and message.content:
+        print(message.content)
+```
 
 ### main.py
 
@@ -212,15 +264,25 @@ Working entry point that demonstrates the integration of graph operations and ve
 ### Setup
 
 1. Clone this repository:
+
 ```bash
 git clone <repository-url>
 cd Global-Supply-Chain-Risk-Agent-GraphRAG-LangGraph-
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
+
+3. Set up environment variables:
+   - Copy `.env.example` to `.env`
+   - Add your OpenRouter API key (get a free key from https://openrouter.ai/):
+
+   ```bash
+   OPENROUTER_API_KEY=your_api_key_here
+   ```
 
 ### Dependencies
 
@@ -228,13 +290,16 @@ pip install -r requirements.txt
 - `chromadb` - Vector database for semantic search
 - `faker` - Synthetic data generation for testing
 - `langchain` - LLM framework integration
+- `langchain-openai` - OpenAI-compatible API integration for OpenRouter
 - `langgraph` - Agent orchestration and state management
 - `matplotlib` - Graph visualization
 - `scipy` - Scientific computing utilities
+- `python-dotenv` - Environment variable management from `.env` files
 
 ## Current Status
 
 ### ✅ Phase 1: Schema Blueprint - COMPLETE
+
 - Graph schema defined (nodes and edges)
 - Data models fully implemented in `schema.py` with module-level docstring
 - All three node classes with proper type hints and hash methods:
@@ -243,6 +308,7 @@ pip install -r requirements.txt
   - `Location.__hash__()` uses (name, country) tuple
 
 ### ✅ Phase 2: Graph Infrastructure - COMPLETE
+
 - `SupplyChainGraph` class implemented in `graph_ops.py`
 - NetworkX directed graph container operational
 - Node and edge addition methods functional
@@ -255,6 +321,7 @@ pip install -r requirements.txt
 - Helper methods for accessing generated data (`get_locations()`, `get_suppliers()`, `get_products()`)
 
 ### ✅ Phase 3: Vector Operations - COMPLETE
+
 - `ProductVectorStore` class fully implemented in `vector_ops.py` with module-level docstring
 - ChromaDB EphemeralClient integration for in-memory vector storage
 - Product indexing by name for semantic search
@@ -263,12 +330,19 @@ pip install -r requirements.txt
 - Product deletion support: `delete_all_products(ids)`
 - Metadata storage (SKU, price) alongside embeddings
 
-### 🚧 Phase 4: Agent Logic - PLANNED
-- `agent.py` - Placeholder (LangGraph agent)
-- Decision-making and orchestration logic needed
-- Risk report generation workflow pending
+### ✅ Phase 4: Agent Logic - COMPLETE
+
+- `agent.py` - Fully implemented LangGraph agent with module-level docstring
+- LangGraph `StateGraph` with `AgentState` and message-based conversation flow
+- Two tools implemented:
+  - `retrieve_product_info()` - Semantic product search via vector store
+  - `explore_graph_connections()` - Graph traversal using NetworkX
+- Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
+- Integrated with OpenRouter API (GPT-OSS 120B free model)
+- Auto-initialization of graph and vector store on module import
 
 ### ✅ Phase 5: Entry Point - COMPLETE
+
 - `main.py` - Working entry point demonstrating full workflow
 - Integrates graph generation and vector indexing
 - Demonstrates semantic search functionality
@@ -276,14 +350,14 @@ pip install -r requirements.txt
 
 ## Development Roadmap
 
-- [x] Graph infrastructure and data generation (Phase 2)
-- [x] Complete vector operations implementation (ChromaDB) - Phase 3
-- [x] Working entry point demonstrating integration (Phase 5)
-- [ ] Implement LangGraph agent with risk assessment logic (Phase 4)
-- [ ] Add graph traversal methods for risk analysis:
-  - Find suppliers by location
-  - Find products by supplier
+- [X] Graph infrastructure and data generation (Phase 2)
+- [X] Complete vector operations implementation (ChromaDB) - Phase 3
+- [X] Implement LangGraph agent with risk assessment logic (Phase 4)
+- [X] Working entry point demonstrating integration (Phase 5)
+- [X] Basic graph traversal methods (`explore_graph_connections`, `get_node_by_name`)
+- [ ] Advanced risk analysis methods:
   - Calculate risk propagation through supply chain
+  - Aggregate risk scores across affected products
 - [ ] Implement risk report generation
 - [ ] Add unit tests for graph operations and data generation
 - [ ] Create example usage scripts demonstrating risk analysis workflows
@@ -345,6 +419,24 @@ vector_store.add_products(products)
 results = vector_store.get_products("medical equipment", k=5)
 for product in results:
     print(f"{product.name} (SKU: {product.sku}, Price: ${product.price})")
+```
+
+### Example: Using the LangGraph Agent
+
+```python
+from agent import agent
+from langchain_core.messages import HumanMessage
+
+# Agent automatically initializes with graph and vector store data
+# Query the agent
+result = agent.invoke({
+    "messages": [HumanMessage(content="What suppliers are located in China?")]
+})
+
+# Extract and print the response
+for message in result["messages"]:
+    if hasattr(message, 'content') and message.content:
+        print(message.content)
 ```
 
 ### Example: Manual Graph Construction

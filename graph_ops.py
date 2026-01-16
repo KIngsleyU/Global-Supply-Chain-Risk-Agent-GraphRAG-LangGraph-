@@ -77,6 +77,18 @@ class SupplyChainGraph:
         """
         return list(self.graph.nodes)
     
+    def get_node_by_name(self, name: str):
+        """
+        Get a node by name.
+        name: str
+        return: Supplier | Product | Location
+        
+        example:
+        node = get_node_by_name("Port of Shanghai")
+        return node
+        """
+        return next((node for node in self.graph.nodes if node.name == name), None)
+    
     def generate_locations(self):
         """
         Generate 20-30 diverse, realistic supply chain locations for the graph.

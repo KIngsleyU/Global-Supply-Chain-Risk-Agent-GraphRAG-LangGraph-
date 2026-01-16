@@ -8,5 +8,4 @@ vector_store = ProductVectorStore()
 
 graph.generate_data()
 vector_store.add_products(graph.get_products())
-
-print(vector_store.get_products("medical equipment"))
+print(vector_store.get_products("tools for my computer"))
