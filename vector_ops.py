@@ -1,40 +1,39 @@
 # ChromaDB Logic (The Brain)
 
 """
-Vector Operations Module for Semantic Product Search
+Vector Operations Module for Semantic Search
 
-This module provides vector database functionality for semantic search over product catalogs
-using ChromaDB. It enables finding products based on semantic similarity rather than exact
-keyword matches, which is crucial for risk analysis when querying with natural language
-descriptions of products or risk categories.
+This module provides vector database functionality for semantic search over supply chain entities
+using ChromaDB. It enables finding products, suppliers, and locations based on semantic similarity
+rather than exact keyword matches, which is crucial for risk analysis when querying with natural
+language descriptions, misspellings, or partial matches.
 
-The ProductVectorStore class enables:
-- Indexing products by their names (semantically meaningful text)
-- Semantic search to find products matching natural language queries
-- Retrieval of products by SKU for direct lookups
-- Management of product metadata (SKU, price) alongside embeddings
+The module provides three vector store classes:
+- ProductVectorStore: Semantic search for products
+- SupplierVectorStore: Semantic search for suppliers
+- LocationVectorStore: Semantic search for locations
 
 Design Decisions:
-- Uses product names for embedding: Product names contain semantic information (e.g., 
-  "Surgical Mask", "Hydraulic Pump") that allows the embedding model to map concepts like
-  "medical supplies" to relevant products even without exact word matches.
-- SKUs stored in metadata: SKUs are numeric identifiers with no semantic meaning, so they
-  are stored in metadata rather than embedded.
+- Uses entity names for embedding: Names contain semantic information (e.g., 
+  "Surgical Mask", "Port of Shanghai", "Acme Corp") that allows the embedding model to map
+  concepts even without exact word matches.
+- Unique IDs stored in metadata: Identifiers (SKU, supplier name, location name+country) are
+  stored in metadata rather than embedded since they have no semantic meaning.
 - In-memory storage: Uses EphemeralClient for in-memory operation, consistent with the
   project's NetworkX approach of running entirely in RAM.
 
 Example:
-    >>> from vector_ops import ProductVectorStore
-    >>> from schema import Product
+    >>> from vector_ops import ProductVectorStore, SupplierVectorStore, LocationVectorStore
+    >>> from schema import Product, Supplier, Location
     >>> 
-    >>> store = ProductVectorStore()
+    >>> product_store = ProductVectorStore()
     >>> products = [Product(name="Surgical Mask", sku="SM001", price=5.99)]
-    >>> store.add_products(products)
-    >>> results = store.get_products("medical equipment", k=5)
+    >>> product_store.add_products(products)
+    >>> results = product_store.get_products("medical equipment", k=5)
 """
 
 import chromadb
-from schema import Product
+from schema import Product, Supplier, Location
 
 class ProductVectorStore:
     def __init__(self):
@@ -150,3 +149,191 @@ class ProductVectorStore:
         """
         self.collection.delete(ids=ids)
         return True
+
+
+class SupplierVectorStore:
+    def __init__(self):
+        """Initialize a vector store for suppliers."""
+        self.client = chromadb.EphemeralClient()
+        self.collection = self.client.create_collection("suppliers")
+
+    def add_suppliers(self, suppliers: list[Supplier]):
+        """
+        Add suppliers to the collection.
+        suppliers: list[Supplier]
+        return: bool
+        
+        example:
+        suppliers = [Supplier(name="Acme Corp", risk_score=0.3, revenue=1000000)]
+        vector_store.add_suppliers(suppliers)
+        return True
+        """
+        ids = []
+        documents = []
+        metadatas = []
+        for supplier in suppliers:
+            # Use supplier name as unique ID
+            ids.append(supplier.name)
+            documents.append(supplier.name)  # Embed the name for semantic search
+            metadatas.append({
+                "name": supplier.name,
+                "risk_score": supplier.risk_score,
+                "revenue": supplier.revenue
+            })
+        if ids:
+            self.collection.add(
+                ids=ids,
+                documents=documents,
+                metadatas=metadatas
+            )
+            print(f"Indexed {len(ids)} suppliers in ChromaDB.")
+            return True
+        else:
+            print("No suppliers to index.")
+            return False
+    
+    def get_suppliers(self, query: str, k: int = 5):
+        """
+        Search for suppliers using semantic similarity search.
+        Useful for finding suppliers by name when there are misspellings or partial matches.
+        
+        query: str - Search query text (e.g., "Acme", "Mexico City supplier")
+        k: int - Number of top results to return (default: 5)
+        return: list[Supplier] - List of Supplier objects matching the query
+        
+        example:
+            suppliers = vector_store.get_suppliers("Acme Corp", k=3)
+            # Returns top 3 suppliers semantically similar to "Acme Corp"
+        """
+        results = self.collection.query(query_texts=[query], n_results=k)
+        
+        found_suppliers = []
+        if results and results['documents']:
+            docs = results['documents'][0]
+            metas = results['metadatas'][0]
+            ids = results['ids'][0]
+            
+            for i in range(len(docs)):
+                found_suppliers.append(Supplier(
+                    name=docs[i],
+                    risk_score=metas[i]['risk_score'],
+                    revenue=metas[i]['revenue']
+                ))
+        return found_suppliers
+    
+    def get_all_suppliers(self, names: list[str]):
+        """
+        Retrieve suppliers from the collection by their names.
+        
+        names: list[str] - List of supplier name strings to retrieve
+        return: list[Supplier] - List of Supplier objects
+        """
+        results = self.collection.get(ids=names)
+        found_suppliers = []
+        
+        if results and results.get('documents') and len(results['documents']) > 0:
+            docs = results['documents']
+            metas = results['metadatas']
+            result_ids = results['ids']
+            
+            for i in range(len(result_ids)):
+                found_suppliers.append(Supplier(
+                    name=docs[i],
+                    risk_score=metas[i]['risk_score'],
+                    revenue=metas[i]['revenue']
+                ))
+        
+        return found_suppliers
+
+
+class LocationVectorStore:
+    def __init__(self):
+        """Initialize a vector store for locations."""
+        self.client = chromadb.EphemeralClient()
+        self.collection = self.client.create_collection("locations")
+
+    def add_locations(self, locations: list[Location]):
+        """
+        Add locations to the collection.
+        locations: list[Location]
+        return: bool
+        
+        example:
+        locations = [Location(name="Port of Shanghai", country="China")]
+        vector_store.add_locations(locations)
+        return True
+        """
+        ids = []
+        documents = []
+        metadatas = []
+        for location in set(locations):
+            # Use name + country as unique ID (matches Location.__hash__)
+            unique_id = f"{location.name}::{location.country}"
+            ids.append(unique_id)
+            # Embed both name and country for better semantic search
+            documents.append(f"{location.name} {location.country}")
+            metadatas.append({
+                "name": location.name,
+                "country": location.country
+            })
+        if ids:
+            self.collection.add(
+                ids=ids,
+                documents=documents,
+                metadatas=metadatas
+            )
+            print(f"Indexed {len(ids)} locations in ChromaDB.")
+            return True
+        else:
+            print("No locations to index.")
+            return False
+    
+    def get_locations(self, query: str, k: int = 5):
+        """
+        Search for locations using semantic similarity search.
+        Useful for finding locations by name when there are misspellings, partial matches,
+        or variations like "Port of mexico city" vs "Mexico City Manufacturing Facility".
+        
+        query: str - Search query text (e.g., "Port of Shanghai", "Mexico City", "Shanghai")
+        k: int - Number of top results to return (default: 5)
+        return: list[Location] - List of Location objects matching the query
+        
+        example:
+            locations = vector_store.get_locations("Port of mexico city", k=3)
+            # Returns top 3 locations semantically similar to the query
+        """
+        results = self.collection.query(query_texts=[query], n_results=k)
+        
+        found_locations = []
+        if results and results['documents']:
+            docs = results['documents'][0]
+            metas = results['metadatas'][0]
+            ids = results['ids'][0]
+            
+            for i in range(len(docs)):
+                found_locations.append(Location(
+                    name=metas[i]['name'],
+                    country=metas[i]['country']
+                ))
+        return found_locations
+    
+    def get_all_locations(self, ids: list[str]):
+        """
+        Retrieve locations from the collection by their unique IDs (name::country format).
+        
+        ids: list[str] - List of location ID strings in "name::country" format
+        return: list[Location] - List of Location objects
+        """
+        results = self.collection.get(ids=ids)
+        found_locations = []
+        
+        if results and results.get('documents') and len(results['documents']) > 0:
+            metas = results['metadatas']
+            
+            for i in range(len(results['ids'])):
+                found_locations.append(Location(
+                    name=metas[i]['name'],
+                    country=metas[i]['country']
+                ))
+        
+        return found_locations

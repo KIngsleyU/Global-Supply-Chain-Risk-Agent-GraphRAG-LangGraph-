@@ -15,7 +15,9 @@ Architecture:
 
 Tools:
 - retrieve_product_info(query): Semantic product search using ChromaDB vector store
-- explore_graph_connections(node_name): Graph traversal to find connected nodes via NetworkX
+- retrieve_supplier_info(query): Semantic supplier search with fuzzy matching
+- retrieve_location_info(query): Semantic location search with fuzzy matching
+- explore_graph_connections(node_name): Graph traversal to find connected nodes via NetworkX (uses semantic matching when exact match fails)
 
 LLM Configuration:
 - Uses OpenRouter API with GPT-OSS 120B free model
@@ -25,7 +27,7 @@ LLM Configuration:
 Initialization:
 - Automatically generates synthetic supply chain data on module import
 - Initializes graph with 20-30 locations, suppliers, and products
-- Indexes all products in the vector store for semantic search
+- Indexes all products, suppliers, and locations in their respective vector stores for semantic search
 
 Example:
     >>> from agent import agent
@@ -44,7 +46,7 @@ Example:
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from graph_ops import SupplyChainGraph
-from vector_ops import ProductVectorStore
+from vector_ops import ProductVectorStore, SupplierVectorStore, LocationVectorStore
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
 import networkx as nx
@@ -52,47 +54,163 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from dotenv import load_dotenv
 import os
+
+# Fix tokenizer warning about parallelism after forking
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 load_dotenv()
 
 # Initialize our specific instances
 graph_db = SupplyChainGraph()
 graph_db.generate_data() # Don't forget to generate the world!
-vector_db = ProductVectorStore()
-vector_db.add_products(graph_db.products) # Don't forget to index the world!
 
-# 1. Vector Search Tool
+# Initialize vector stores for semantic search
+product_vector_db = ProductVectorStore()
+supplier_vector_db = SupplierVectorStore()
+location_vector_db = LocationVectorStore()
+
+# Index all entities in their respective vector stores
+product_vector_db.add_products(graph_db.products)
+supplier_vector_db.add_suppliers(graph_db.suppliers)
+location_vector_db.add_locations(graph_db.locations)
+
+# 1. Product Search Tool
 def retrieve_product_info(query: str):
     """
     Useful to find products based on a semantic query like 'medical supplies'.
-    query: str
-    return: list[Product]
+    Uses semantic similarity search to handle misspellings and partial matches.
+    
+    query: str - Search query (e.g., "medical supplies", "tech products")
+    return: list[str] - List of product descriptions as strings
     
     example:
     products = retrieve_product_info("tech supplies")
     return products
     """
-    # Call vector_db.get_products...
-    return vector_db.get_products(query)
+    products = product_vector_db.get_products(query, k=5)
+    return_products = [] # list to store the products
+    for product in products:
+        if query.lower() == product.name.lower():
+            return [str(product)]
+        return_products.append(str(product))  # add the product to the list 
+    return return_products
 
-# 2. Graph Traversal Tool
+# 2. Supplier Search Tool
+def retrieve_supplier_info(query: str):
+    """
+    Useful to find suppliers based on a semantic query or name.
+    Uses semantic similarity search to handle misspellings and partial matches.
+    If exact match not found, returns top similar matches.
+    
+    query: str - Search query (e.g., "Acme Corp", "Mexican suppliers")
+    return: list[str] - List of supplier descriptions as strings, or message if no exact match
+    
+    example:
+    suppliers = retrieve_supplier_info("Acme Corporation")
+    return suppliers
+    """
+    suppliers = supplier_vector_db.get_suppliers(query, k=5)
+    if not suppliers:
+        return [f"No suppliers found matching '{query}'. Try a different search term."]
+    return_suppliers = [] # list to store the suppliers 
+    for supplier in suppliers:
+        if query.lower() == supplier.name.lower():
+            return [str(supplier)]
+        return_suppliers.append(str(supplier))  # add the supplier to the list
+    return return_suppliers
+
+# 3. Location Search Tool
+def retrieve_location_info(query: str):
+    """
+    Useful to find locations based on a semantic query or name.
+    Uses semantic similarity search to handle misspellings, partial matches, and variations.
+    If exact match not found, returns top similar matches.
+    
+    query: str - Search query (e.g., "Port of Shanghai", "Mexico City", "Shanghai port")
+    return: list[str] - List of location descriptions as strings, or message if no exact match
+    
+    example:
+    locations = retrieve_location_info("Port of mexico city")
+    # Will find "Mexico City Manufacturing Facility" or similar even with misspelling
+    return locations
+    """
+    locations = location_vector_db.get_locations(query, k=5)
+    if not locations:
+        return [f"No locations found matching '{query}'. Try a different search term."]
+    return_locations = [] # list to store the locations
+    for location in locations:
+        if query.lower() == location.name.lower():
+            return [str(location)]
+        return_locations.append(str(location))  # add the location to the list
+    return return_locations
+# 4. Graph Traversal Tool
 def explore_graph_connections(node_name: str):
     """
-    Useful to find what is connected to a specific node (e.g., finding suppliers at a location).    
-    node_name: str
-    return: list[str]
+    Useful to find what is connected to a specific node in the graph (e.g., finding suppliers at a location,
+    products from a supplier, locations for a supplier).
+    
+    Uses semantic matching via vector stores when exact match fails. This handles misspellings,
+    partial matches, and variations (e.g., "Port of mexico city" will find "Mexico City Manufacturing Facility").
+    
+    node_name: str - Name of the node to search for (can be supplier, location, or product name)
+    return: list[str] - List of connected nodes as strings, or helpful message if not found
     
     example:
     suppliers = explore_graph_connections("Port of Shanghai")
-    return suppliers
+    products = explore_graph_connections("Acme Corp")
+    return suppliers or products
     """
-    # NetworkX logic:
-    # 1. Find the node object in graph_db.graph.nodes where name == node_name
-    # 2. Return its neighbors (successors/predecessors)
-    # Hint: nx.all_neighbors(graph_db.graph, found_node)
+    # Try exact match first
     found_node = graph_db.get_node_by_name(node_name)
+    is_exact_match = found_node is not None
+    matched_via_semantic = False
+    
+    # If not found, use semantic search via vector stores
     if not found_node:
-        return []
-    return list(nx.all_neighbors(graph_db.graph, found_node))
+        # Try location vector store first (most common use case)
+        locations = location_vector_db.get_locations(node_name, k=1)
+        if locations:
+            found_node = graph_db.get_node_by_name(locations[0].name)
+            matched_via_semantic = True
+        
+        # If still not found, try supplier vector store
+        if not found_node:
+            suppliers = supplier_vector_db.get_suppliers(node_name, k=1)
+            if suppliers:
+                found_node = graph_db.get_node_by_name(suppliers[0].name)
+                matched_via_semantic = True
+        
+        # If still not found, try product vector store
+        if not found_node:
+            products = product_vector_db.get_products(node_name, k=1)
+            if products:
+                found_node = graph_db.get_node_by_name(products[0].name)
+                matched_via_semantic = True
+        
+        # If still no match - suggest using retrieve_location_info or retrieve_supplier_info
+        if not found_node:
+            return [
+                f"No node found matching '{node_name}' (exact or similar).\n"
+                f"Try using retrieve_location_info('{node_name}') to find similar locations, "
+                f"or retrieve_supplier_info('{node_name}') to find similar suppliers."
+            ]
+    
+    neighbors = list(nx.all_neighbors(graph_db.graph, found_node))
+    if not neighbors:
+        return [f"Node '{found_node.name}' found but has no connections in the graph."]
+    
+    # Build result with connected nodes
+    connected_nodes = [str(neighbor) for neighbor in neighbors]
+    
+    # If matched via semantic search, inform the LLM about the similarity match
+    if matched_via_semantic:
+        return [
+            f"Note: No exact match for '{node_name}', but found similar node: {found_node.name}\n"
+            f"Connected nodes:\n" + "\n".join(connected_nodes)
+        ]
+    
+    # Exact match - return just the connected nodes
+    return connected_nodes
 
 # Define the AgentState class: the State (The "Memory")
 # This is the memory of the agent. It is a list of messages.
@@ -107,7 +225,12 @@ class AgentState(TypedDict):
 """
 
 # ... Define tools list ...
-tools = [retrieve_product_info, explore_graph_connections]
+tools = [
+    retrieve_product_info,
+    retrieve_supplier_info,
+    retrieve_location_info,
+    explore_graph_connections
+]
 
 
 # LLM Setup
@@ -115,13 +238,24 @@ api_key = os.getenv("OPENROUTER_API_KEY", "")
 if not api_key:
     raise ValueError("OPENROUTER_API_KEY environment variable is required when using OpenRouter. Get your free key from https://openrouter.ai/")
 
-model_name = "openai/gpt-oss-120b:free"
-
+# Model selection for OpenRouter
+# Note: Not all free models support function calling/tool use properly
+# Try these models that are known to work with function calling:
+# - deepseek/deepseek-chat-v3:free (recommended - reliable)
+# - qwen/qwen-2.5-72b-instruct:free
+# - meta-llama/llama-3.3-70b-instruct:free
+# model_name = "openai/gpt-oss-20b:free"
+# model_name = "openai/gpt-oss-120b:free"
+model_name = os.getenv(
+    "OPENROUTER_MODEL", 
+    # "google/gemini-2.0-flash-exp:free",
+    "z-ai/glm-4.5-air:free")
 llm = ChatOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=api_key,
     model=model_name,  # Default: Gemini Flash (supports tool calling)
-    temperature=0
+    temperature=0,
+    max_retries=5
 )
 
 # ... Bind tools to LLM ...
