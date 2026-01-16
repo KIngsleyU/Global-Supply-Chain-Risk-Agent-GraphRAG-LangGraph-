@@ -1,45 +1,40 @@
 # The Entry Point
-
 """
-Phase 6: The Final Assembly (main.py)
+Main Entry Point for Supply Chain Risk Analysis Agent
 
-We are at the finish line. We have:
+This module serves as the application entry point for the Global Supply Chain Risk Agent.
+It orchestrates the execution of the LangGraph agent to analyze supply chain risks by
+querying the knowledge graph and vector stores.
 
-schema.py: The Data Structures.
+The module performs the following functions:
+- Initializes the agent from agent.py
+- Defines and executes user queries about supply chain risk events
+- Invokes the LangGraph agent with appropriate configuration
+- Displays the full conversation flow including tool calls and responses
+- Handles errors gracefully with informative messages for API failures and recursion limits
 
-graph_ops.py: The World Generator (updated with your new method).
+Key Features:
+- Comprehensive error handling for API failures (OpenRouter service issues)
+- Recursion limit management to prevent infinite agent loops
+- Detailed conversation flow output showing all messages, tool calls, and responses
+- Automatic content deduplication to handle LLM response repetition
 
-vector_ops.py: The Semantic Brain.
+Example Usage:
+    The module is typically executed directly:
+    $ python main.py
+    
+    This will run the agent with a predefined query about assessing the impact of
+    supply chain disruptions at specific locations.
 
-agent.py: The Reasoning Engine (which we just need to save).
+Error Handling:
+    - ValueError: Handles API errors (e.g., 502 from OpenRouter service)
+    - GraphRecursionError: Detects when agent is stuck in infinite loops
+    - BadRequestError: Identifies model incompatibility issues (e.g., unsupported function calling)
+    - Generic Exception: Catches and displays unexpected errors
 
-One small tip for agent.py: When explore_graph_connections returns a list of neighbors, those neighbors are Python Objects (e.g., Supplier(...)). The LLM does a pretty good job reading them, but it's often safer to convert them to strings so the LLM doesn't get confused by the class formatting.
-
-Let's assume the default string representation (from @dataclass) is good enough for now.
-
-🏃 Step 6: Running the Simulation
-
-Create the final file: main.py.
-
-This file needs to:
-
-Import the compiled agent from your agent.py.
-
-Define a user query (the "Risk Event").
-
-Invoke the agent.
-
-Print the conversation processing steps so we can see the "Brain" working.
-
-The Challenge: Can you write main.py?
-
-Goal: Ask the agent: "Assess the impact of a strike at the Port of Shanghai on our supply chain."
-
-Hint: You invoke the agent like this: result = agent.invoke({"messages": [("user", "Your Query Here")]})
-
-Hint: The result will contain messages. You'll want to loop through them and print the content to see the tool calls.
-
-Give it a shot! This is the moment of truth where we see if it all works.
+Configuration:
+    - Recursion limit is set to 50 to allow complex multi-step agent reasoning
+    - Tokenizer parallelism is disabled to prevent warnings during forking
 """
 
 import os
@@ -49,7 +44,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from agent import agent
 from langchain_core.messages import HumanMessage
 
-query = "Assess the impact of a strike at the Port of mexico city on our supply chain. FYI: my print out viewong window is very small, so please make it easy to read."
+query = "Assess the impact of a strike at the Port of mexico city on our supply chain. FYI: my print out viewing window is very small, so please make it easy to read."
 print("Query:")
 print(query)
 print("=" * 60)
@@ -150,18 +145,3 @@ for i, message in enumerate(result["messages"]):
     if hasattr(message, 'tool_call_id'):
         print(f"Tool Call ID: {message.tool_call_id}")
 
-# print("\n" + "=" * 60)
-# print("FINAL RESPONSE")
-# print("=" * 60)
-
-# # Get the final AI response (last message with content)
-# final_response = None
-# for message in reversed(result["messages"]):
-#     if hasattr(message, 'content') and message.content and not hasattr(message, 'tool_call_id'):
-#         # Check if it's from AI (not a HumanMessage)
-#         if message.__class__.__name__ == 'AIMessage':
-#             final_response = message.content
-#             break
-
-# if final_response:
-#     print(final_response)
