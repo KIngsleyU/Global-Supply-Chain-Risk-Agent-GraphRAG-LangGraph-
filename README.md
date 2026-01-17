@@ -43,6 +43,7 @@ The project uses **NetworkX** (in-memory directed graph) to simulate a graph dat
 ├── vector_ops.py      # ✅ ChromaDB Logic (Vector Search) - IMPLEMENTED
 ├── agent.py           # ✅ LangGraph Agent - IMPLEMENTED
 ├── main.py            # ✅ Entry Point - WORKING
+├── app.py             # ✅ Streamlit Web App - IMPLEMENTED
 ├── requirements.txt   # ✅ Dependencies
 └── README.md          # Project documentation
 ```
@@ -151,82 +152,136 @@ graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 
 ### vector_ops.py
 
-Implements the `ProductVectorStore` class for semantic product search using ChromaDB:
+Implements three vector store classes for semantic search over supply chain entities using ChromaDB:
+
+**Classes:**
+
+1. **ProductVectorStore** - Semantic search for products
+2. **SupplierVectorStore** - Semantic search for suppliers  
+3. **LocationVectorStore** - Semantic search for locations
 
 **Key Features:**
 
 - Uses ChromaDB `EphemeralClient()` for in-memory operation (consistent with NetworkX approach)
-- Indexes products by their names for semantic search
-- Enables natural language queries to find relevant products
-- Stores SKU and price in metadata for retrieval
+- Indexes entity names for semantic similarity search
+- Enables natural language queries with fuzzy matching for misspellings and partial matches
+- Stores metadata (SKU, price, risk_score, revenue, country) alongside embeddings
+- Handles exact match detection when query matches entity name exactly
+- Configured with cosine similarity for semantic search (`hnsw:space: cosine`)
 
-**API:**
+**ProductVectorStore API:**
 
-- `ProductVectorStore()` - Initialize an in-memory vector store
+- `ProductVectorStore()` - Initialize an in-memory vector store for products
 - `add_products(products)` - Index a list of Product objects
 - `get_products(query, k)` - Semantic search for products matching a query (default: top 5 results)
 - `get_all_products(ids)` - Retrieve products by their SKU IDs
 - `delete_all_products(ids)` - Remove products from the collection by SKU
 
+**SupplierVectorStore API:**
+
+- `SupplierVectorStore()` - Initialize an in-memory vector store for suppliers
+- `add_suppliers(suppliers)` - Index a list of Supplier objects
+- `get_suppliers(query, k)` - Semantic search for suppliers matching a query (default: top 5 results)
+- `get_all_suppliers(names)` - Retrieve suppliers by their names
+
+**LocationVectorStore API:**
+
+- `LocationVectorStore()` - Initialize an in-memory vector store for locations
+- `add_locations(locations)` - Index a list of Location objects
+- `get_locations(query, k)` - Semantic search for locations matching a query (default: top 5 results)
+- `get_all_locations(ids)` - Retrieve locations by their unique IDs (name::country format)
+
 **Design Decisions:**
 
-- Product names are embedded (semantically meaningful text like "Surgical Mask", "Hydraulic Pump")
-- SKUs are stored in metadata (numeric identifiers with no semantic meaning)
+- Entity names are embedded (semantically meaningful text like "Surgical Mask", "Port of Shanghai", "Acme Corp")
+- Unique identifiers stored in metadata (SKU for products, name for suppliers, name::country for locations)
+- Semantic search enables fuzzy matching for misspellings (e.g., "Port of mexico city" → "Mexico City Manufacturing Facility")
 - In-memory storage matches project philosophy of running entirely in RAM
+- Cosine similarity configured for optimal semantic matching
 
 **Example Usage:**
 
 ```python
-from vector_ops import ProductVectorStore
+from vector_ops import ProductVectorStore, SupplierVectorStore, LocationVectorStore
 from graph_ops import SupplyChainGraph
 
-# Create vector store
-vector_store = ProductVectorStore()
+# Create vector stores
+product_store = ProductVectorStore()
+supplier_store = SupplierVectorStore()
+location_store = LocationVectorStore()
 
-# Generate graph and products
+# Generate graph data
 graph = SupplyChainGraph()
 graph.generate_data()
 
-# Index products for semantic search
-vector_store.add_products(graph.get_products())
-# Output: "Indexed X products in ChromaDB."
+# Index entities for semantic search
+product_store.add_products(graph.get_products())
+supplier_store.add_suppliers(graph.get_suppliers())
+location_store.add_locations(graph.get_locations())
 
-# Search for products semantically
-results = vector_store.get_products("medical equipment", k=5)
-# Returns top 5 products semantically similar to "medical equipment"
-
-# Get specific products by SKU
-products = vector_store.get_all_products(["1234", "5678"])
+# Semantic search with fuzzy matching
+products = product_store.get_products("medical equipment", k=5)
+suppliers = supplier_store.get_suppliers("Acme Corporation", k=3)
+locations = location_store.get_locations("Port of mexico city", k=3)
+# Handles misspellings and partial matches automatically
 ```
 
 ### agent.py
 
-Implements the LangGraph agent for supply chain risk analysis using graph traversal and vector search:
+Implements the LangGraph agent for supply chain risk analysis using graph traversal and semantic vector search:
 
 **Key Features:**
 
 - Uses LangGraph's `StateGraph` with `AgentState` for message-based conversation flow
-- Integrates with OpenRouter API for free LLM access (GPT-OSS 120B free model)
+- Integrates with OpenRouter API for free LLM access (configurable model, default: `z-ai/glm-4.5-air:free`)
 - Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
-- Auto-initializes graph and vector store with synthetic data on import
+- Auto-initializes graph and all three vector stores (product, supplier, location) with synthetic data on import
+- Semantic matching fallback for fuzzy entity lookups (handles misspellings automatically)
+- System message integration to guide LLM behavior and encourage final summaries
 
 **Tools Implemented:**
 
-- `retrieve_product_info(query)` - Semantic product search using vector store
-- `explore_graph_connections(node_name)` - Graph traversal to find connected nodes using NetworkX
+1. **`retrieve_product_info(query)`** - Semantic product search using ProductVectorStore
+   - Handles exact matches (returns single result if query matches product name exactly)
+   - Falls back to semantic similarity search for partial matches
+
+2. **`retrieve_supplier_info(query)`** - Semantic supplier search using SupplierVectorStore
+   - Fuzzy matching for supplier names with misspellings or variations
+   - Returns top 5 similar suppliers if exact match not found
+
+3. **`retrieve_location_info(query)`** - Semantic location search using LocationVectorStore
+   - Handles location name variations (e.g., "Port of mexico city" → "Mexico City Manufacturing Facility")
+   - Returns top 5 similar locations with country information
+
+4. **`explore_graph_connections(node_name)`** - Graph traversal with semantic fallback
+   - Tries exact match first using `graph_db.get_node_by_name()`
+   - If not found, uses semantic search via vector stores (location → supplier → product)
+   - Informs LLM when similar match is used instead of exact match
+   - Returns connected nodes (neighbors) as strings for LLM readability
 
 **Architecture:**
 
 - **AgentState**: TypedDict with `messages` field using `add_messages` reducer
-- **Chatbot Node**: Calls LLM with tools bound, handles conversation flow
+- **Chatbot Node**: Calls LLM with tools bound, handles conversation flow, injects system messages when needed
 - **Tools Node**: Uses LangGraph's pre-built `ToolNode` to execute function calls
-- **Conditional Edges**: Routes between chatbot and tools based on tool calls
+- **Conditional Edges**: Routes between chatbot and tools based on tool call detection
+- **Vector Stores**: Three separate vector stores initialized and indexed on module import
 
 **LLM Configuration:**
 
-- Uses OpenRouter API with GPT-OSS 120B free model
+- Uses OpenRouter API with configurable model via `OPENROUTER_MODEL` environment variable
+- Default model: `z-ai/glm-4.5-air:free` (supports function calling/tool use)
 - Requires `OPENROUTER_API_KEY` environment variable
-- Model: `openai/gpt-oss-120b:free`
+- Temperature: 0 (deterministic responses)
+- Max retries: 5
+- System message guidance to ensure final summaries after tool calls
+
+**Initialization:**
+
+On module import, the agent automatically:
+1. Generates synthetic supply chain data (20-30 locations, 50-100 suppliers, 100+ products)
+2. Initializes three vector stores (ProductVectorStore, SupplierVectorStore, LocationVectorStore)
+3. Indexes all entities in their respective vector stores for semantic search
 
 **Example Usage:**
 
@@ -234,25 +289,102 @@ Implements the LangGraph agent for supply chain risk analysis using graph traver
 from agent import agent
 from langchain_core.messages import HumanMessage
 
-# Agent is auto-initialized with data
+# Agent is auto-initialized with data and vector stores
 result = agent.invoke({
-    "messages": [HumanMessage(content="What suppliers are in China?")]
-})
+    "messages": [HumanMessage(content="Assess the impact of a strike at the Port of mexico city")]
+}, config={"recursion_limit": 50})
 
-# Access the final response
+# Access all messages in conversation flow
 for message in result["messages"]:
     if hasattr(message, 'content') and message.content:
         print(message.content)
+    # Tool calls and results are also in the messages list
 ```
 
 ### main.py
 
-Working entry point that demonstrates the integration of graph operations and vector search:
+Entry point module that orchestrates the LangGraph agent execution for supply chain risk analysis:
 
-- Creates a `SupplyChainGraph` instance and generates synthetic supply chain data
-- Creates a `ProductVectorStore` instance and indexes the generated products
-- Demonstrates semantic search by querying for "medical equipment"
-- Shows the complete workflow from graph generation to vector search
+**Key Features:**
+
+- Initializes and invokes the LangGraph agent with user queries
+- Displays comprehensive conversation flow including all messages, tool calls, and responses
+- Handles errors gracefully with informative messages for different failure scenarios
+- Automatic content deduplication to handle LLM response repetition
+- Configurable recursion limit (default: 50) for complex multi-step agent reasoning
+- Diagnostic output showing total messages, message types, and final status
+
+**Error Handling:**
+
+- **ValueError (502/Upstream errors)**: OpenRouter service unavailability with helpful suggestions
+- **GraphRecursionError**: Detects infinite loops, provides debugging guidance
+- **BadRequestError (400)**: Model compatibility issues with alternative model recommendations
+- **Generic Exception**: Catches and displays unexpected errors
+
+**Output:**
+
+- Prints the user query
+- Displays the complete agent conversation flow:
+  - Human messages (user queries)
+  - AI messages (LLM responses and tool call decisions)
+  - Tool messages (tool execution results)
+  - Tool call details (function names and arguments)
+- Final status summary with diagnostics
+
+**Configuration:**
+
+- Recursion limit: 50 (allows complex multi-step reasoning)
+- Tokenizer parallelism disabled to prevent warnings
+
+**Example Usage:**
+
+```bash
+# Run the agent with the predefined query
+python main.py
+
+# The agent will:
+# 1. Load pre-initialized graph and vector stores
+# 2. Process the query about supply chain disruptions
+# 3. Display the full conversation flow with tool calls
+# 4. Show the final risk assessment (if LLM provides one)
+```
+
+### app.py
+
+Streamlit web application for interactive supply chain risk visualization:
+
+**Key Features:**
+
+- Interactive web-based visualization of the supply chain graph
+- Risk threshold slider to highlight suppliers with risk scores above a configurable threshold
+- Color-coded visualization:
+  - Blue boxes: Locations
+  - Red boxes: High-risk suppliers (risk_score > threshold)
+  - Green boxes: Low-risk suppliers (risk_score <= threshold)
+  - Yellow ovals: Products with pricing information
+- Directed graph visualization showing relationships:
+  - Supplier → LOCATED_AT → Location
+  - Supplier → MANUFACTURES → Product
+
+**Architecture:**
+
+- Uses Streamlit for web interface and user interaction
+- Uses Graphviz via streamlit's `graphviz_chart` for graph rendering
+- Integrates with `SupplyChainGraph` from `graph_ops` module for data access
+- Caches graph data using `@st.cache_resource` for performance
+
+**Usage:**
+
+```bash
+# Run the Streamlit application
+streamlit run app.py
+
+# The application will:
+# 1. Generate or load supply chain data using SupplyChainGraph
+# 2. Display an interactive graph visualization
+# 3. Allow users to adjust risk threshold via sidebar slider
+# 4. Update the visualization to highlight suppliers based on risk threshold
+```
 
 ## Installation
 
@@ -295,6 +427,8 @@ pip install -r requirements.txt
 - `matplotlib` - Graph visualization
 - `scipy` - Scientific computing utilities
 - `python-dotenv` - Environment variable management from `.env` files
+- `graphviz` - Graph visualization library (for Streamlit app)
+- `streamlit` - Web application framework (for interactive visualization)
 
 ## Current Status
 
@@ -322,46 +456,73 @@ pip install -r requirements.txt
 
 ### ✅ Phase 3: Vector Operations - COMPLETE
 
-- `ProductVectorStore` class fully implemented in `vector_ops.py` with module-level docstring
+- Three vector store classes fully implemented in `vector_ops.py` with module-level docstring:
+  - `ProductVectorStore` - Semantic product search
+  - `SupplierVectorStore` - Semantic supplier search with fuzzy matching
+  - `LocationVectorStore` - Semantic location search with fuzzy matching
 - ChromaDB EphemeralClient integration for in-memory vector storage
-- Product indexing by name for semantic search
-- Semantic search functionality: `get_products(query, k)` finds products by natural language
-- Direct product retrieval: `get_all_products(ids)` retrieves by SKU
-- Product deletion support: `delete_all_products(ids)`
-- Metadata storage (SKU, price) alongside embeddings
+- Entity indexing by name for semantic search across all entity types
+- Semantic search functionality with exact match detection:
+  - `get_products(query, k)` - Finds products by natural language
+  - `get_suppliers(query, k)` - Finds suppliers with misspelling tolerance
+  - `get_locations(query, k)` - Finds locations with name variations
+- Direct entity retrieval methods for all stores
+- Metadata storage (SKU, price, risk_score, revenue, country) alongside embeddings
+- Cosine similarity configuration (`hnsw:space: cosine`) for optimal semantic matching
 
 ### ✅ Phase 4: Agent Logic - COMPLETE
 
 - `agent.py` - Fully implemented LangGraph agent with module-level docstring
 - LangGraph `StateGraph` with `AgentState` and message-based conversation flow
-- Two tools implemented:
-  - `retrieve_product_info()` - Semantic product search via vector store
-  - `explore_graph_connections()` - Graph traversal using NetworkX
+- Four tools implemented:
+  - `retrieve_product_info(query)` - Semantic product search via ProductVectorStore
+  - `retrieve_supplier_info(query)` - Semantic supplier search via SupplierVectorStore
+  - `retrieve_location_info(query)` - Semantic location search via LocationVectorStore
+  - `explore_graph_connections(node_name)` - Graph traversal with semantic fallback
 - Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
-- Integrated with OpenRouter API (GPT-OSS 120B free model)
-- Auto-initialization of graph and vector store on module import
+- Integrated with OpenRouter API (default: `z-ai/glm-4.5-air:free`, configurable via `OPENROUTER_MODEL`)
+- Auto-initialization of graph and all three vector stores on module import
+- Semantic matching fallback in `explore_graph_connections()` handles misspellings automatically
+- System message integration to guide LLM behavior and encourage final summaries after tool calls
+- Exact match detection in retrieval tools for optimal performance
 
 ### ✅ Phase 5: Entry Point - COMPLETE
 
-- `main.py` - Working entry point demonstrating full workflow
-- Integrates graph generation and vector indexing
-- Demonstrates semantic search functionality
-- No longer has duplicate code - uses proper imports
+- `main.py` - Working entry point with module-level docstring
+- Orchestrates LangGraph agent execution with comprehensive error handling
+- Displays full conversation flow including tool calls and responses
+- Automatic content deduplication to handle LLM response repetition
+- Error handling for API failures, recursion limits, and model compatibility issues
+- Configurable recursion limit (50) for complex agent reasoning
+- Diagnostic output for troubleshooting agent behavior
+
+### ✅ Phase 6: Web Visualization - COMPLETE
+
+- `app.py` - Streamlit web application with module-level docstring
+- Interactive graph visualization using Graphviz
+- Risk threshold slider for dynamic filtering
+- Color-coded visualization (locations, suppliers, products)
+- Graph data caching for performance
 
 ## Development Roadmap
 
 - [X] Graph infrastructure and data generation (Phase 2)
-- [X] Complete vector operations implementation (ChromaDB) - Phase 3
-- [X] Implement LangGraph agent with risk assessment logic (Phase 4)
-- [X] Working entry point demonstrating integration (Phase 5)
+- [X] Complete vector operations implementation with three vector stores (Phase 3)
+- [X] Implement LangGraph agent with four tools and semantic matching (Phase 4)
+- [X] Working entry point with error handling and diagnostics (Phase 5)
+- [X] Streamlit web application for graph visualization (Phase 6)
 - [X] Basic graph traversal methods (`explore_graph_connections`, `get_node_by_name`)
+- [X] Semantic matching for fuzzy entity lookups (handles misspellings automatically)
+- [X] Three vector stores for products, suppliers, and locations
+- [X] Exact match detection in retrieval tools for optimal performance
+- [X] System message integration for LLM guidance
 - [ ] Advanced risk analysis methods:
   - Calculate risk propagation through supply chain
   - Aggregate risk scores across affected products
-- [ ] Implement risk report generation
-- [ ] Add unit tests for graph operations and data generation
+- [ ] Implement risk report generation with formatted output
+- [ ] Add unit tests for graph operations, vector stores, and data generation
 - [ ] Create example usage scripts demonstrating risk analysis workflows
-- [ ] Add graph visualization capabilities using matplotlib/NetworkX
+- [ ] Performance optimization for large-scale supply chain graphs
 - [ ] Add query methods for finding affected entities during risk events
 
 ## Usage
@@ -400,25 +561,28 @@ for supplier in suppliers:
 
 ```python
 from graph_ops import SupplyChainGraph
-from vector_ops import ProductVectorStore
+from vector_ops import ProductVectorStore, SupplierVectorStore, LocationVectorStore
 
 # Initialize components
 graph = SupplyChainGraph()
-vector_store = ProductVectorStore()
+product_store = ProductVectorStore()
+supplier_store = SupplierVectorStore()
+location_store = LocationVectorStore()
 
 # Generate supply chain data
 graph.generate_data()
-# Output: "Generated 25 locations, 48 suppliers, 92 products"
+# Output: "Generated 26 locations, 57 suppliers, 117 products"
 
-# Index products for semantic search
-products = graph.get_products()
-vector_store.add_products(products)
-# Output: "Indexed 92 products in ChromaDB."
+# Index all entities for semantic search
+product_store.add_products(graph.get_products())
+supplier_store.add_suppliers(graph.get_suppliers())
+location_store.add_locations(graph.get_locations())
 
-# Perform semantic search
-results = vector_store.get_products("medical equipment", k=5)
-for product in results:
-    print(f"{product.name} (SKU: {product.sku}, Price: ${product.price})")
+# Perform semantic search with fuzzy matching
+products = product_store.get_products("medical equipment", k=5)
+suppliers = supplier_store.get_suppliers("Acme Corporation", k=3)
+locations = location_store.get_locations("Port of mexico city", k=3)
+# Handles misspellings and partial matches automatically
 ```
 
 ### Example: Using the LangGraph Agent
@@ -427,16 +591,35 @@ for product in results:
 from agent import agent
 from langchain_core.messages import HumanMessage
 
-# Agent automatically initializes with graph and vector store data
-# Query the agent
+# Agent automatically initializes with graph and all three vector stores
+# Query the agent (semantic matching handles misspellings automatically)
 result = agent.invoke({
-    "messages": [HumanMessage(content="What suppliers are located in China?")]
-})
+    "messages": [HumanMessage(content="Assess the impact of a strike at the Port of mexico city")]
+}, config={"recursion_limit": 50})
 
-# Extract and print the response
+# Extract and print all messages (includes tool calls and responses)
 for message in result["messages"]:
     if hasattr(message, 'content') and message.content:
         print(message.content)
+    # Tool calls are embedded in AIMessage objects
+    if hasattr(message, 'tool_calls') and message.tool_calls:
+        for tool_call in message.tool_calls:
+            print(f"Tool: {tool_call.get('name')} with args: {tool_call.get('args')}")
+```
+
+**Note**: The agent uses semantic matching, so queries like "Port of mexico city" will automatically find similar locations like "Mexico City Manufacturing Facility" even with misspellings or variations.
+
+### Example: Using the Streamlit Web App
+
+```bash
+# Launch the interactive visualization
+streamlit run app.py
+
+# The app will:
+# 1. Load supply chain data (cached after first run)
+# 2. Display interactive graph visualization
+# 3. Allow you to adjust risk threshold slider
+# 4. Show suppliers above threshold in red
 ```
 
 ### Example: Manual Graph Construction

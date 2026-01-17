@@ -1,3 +1,44 @@
+"""
+Streamlit Web Application for Supply Chain Risk Visualization
+
+This module provides an interactive web interface for visualizing the supply chain knowledge graph
+using Streamlit and Graphviz. It enables users to explore supply chain relationships, identify
+high-risk suppliers, and understand the connections between locations, suppliers, and products.
+
+Key Features:
+- Interactive web-based visualization of the supply chain graph
+- Risk threshold slider to highlight suppliers with risk scores above a configurable threshold
+- Color-coded visualization:
+  * Blue boxes: Locations
+  * Red boxes: High-risk suppliers (risk_score > threshold)
+  * Green boxes: Low-risk suppliers (risk_score <= threshold)
+  * Yellow ovals: Products with pricing information
+- Directed graph visualization showing relationships:
+  * Supplier → LOCATED_AT → Location
+  * Supplier → MANUFACTURES → Product
+
+Architecture:
+- Uses Streamlit for web interface and user interaction
+- Uses Graphviz via streamlit's graphviz_chart for graph rendering
+- Integrates with SupplyChainGraph from graph_ops module for data access
+- Caches graph data using @st.cache_resource for performance
+
+Usage:
+    Run the Streamlit application:
+    $ streamlit run app.py
+    
+    The application will:
+    1. Generate or load supply chain data using SupplyChainGraph
+    2. Display an interactive graph visualization
+    3. Allow users to adjust risk threshold via sidebar slider
+    4. Update the visualization to highlight suppliers based on risk threshold
+
+Dependencies:
+    - streamlit: Web application framework
+    - graphviz: Graph visualization library
+    - graph_ops: Supply chain graph operations module
+"""
+
 import streamlit as st
 import graphviz
 from graph_ops import SupplyChainGraph
