@@ -40,7 +40,10 @@ class ProductVectorStore:
         # Use EphemeralClient for in-memory storage (consistent with NetworkX approach)
         # This matches the project philosophy of running entirely in RAM
         self.client = chromadb.EphemeralClient()
-        self.collection = self.client.create_collection("products")
+        self.collection = self.client.create_collection(
+            name="products",
+            metadata={"hnsw:space": "cosine"}
+        )   # metadata is used to configure the collection for semantic search
 
     def add_products(self, products: list[Product]):
         """
@@ -155,8 +158,11 @@ class SupplierVectorStore:
     def __init__(self):
         """Initialize a vector store for suppliers."""
         self.client = chromadb.EphemeralClient()
-        self.collection = self.client.create_collection("suppliers")
-
+        self.collection = self.client.create_collection(
+            name="suppliers",
+            metadata={"hnsw:space": "cosine"}
+        )
+        # metadata is used to configure the collection for semantic search
     def add_suppliers(self, suppliers: list[Supplier]):
         """
         Add suppliers to the collection.
@@ -250,7 +256,11 @@ class LocationVectorStore:
     def __init__(self):
         """Initialize a vector store for locations."""
         self.client = chromadb.EphemeralClient()
-        self.collection = self.client.create_collection("locations")
+        self.collection = self.client.create_collection(
+            name="locations",
+            metadata={"hnsw:space": "cosine"}
+        )
+        # metadata is used to configure the collection for semantic search
 
     def add_locations(self, locations: list[Location]):
         """

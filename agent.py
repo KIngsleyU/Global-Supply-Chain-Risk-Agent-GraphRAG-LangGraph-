@@ -205,7 +205,7 @@ def explore_graph_connections(node_name: str):
     # If matched via semantic search, inform the LLM about the similarity match
     if matched_via_semantic:
         return [
-            f"Note: No exact match for '{node_name}', but found similar node: {found_node.name}\n"
+            f"Note: No exact match for '{node_name}', but found a semantically similar node: {found_node.name}, and this semantically similar node has connections to the following nodes:\n"
             f"Connected nodes:\n" + "\n".join(connected_nodes)
         ]
     
@@ -263,7 +263,34 @@ llm_with_tools = llm.bind_tools(tools)
 
 # ... Define the Nodes ...
 def chatbot(state: AgentState):
-    return {"messages": [llm_with_tools.invoke(state["messages"])]}
+    from langchain_core.messages import SystemMessage
+    
+    messages = state["messages"]
+    
+    # Count tool calls to detect when we're getting too deep without a summary
+    tool_call_count = sum(1 for msg in messages if hasattr(msg, 'tool_calls') and msg.tool_calls)
+    
+    # Check if we have a system message already
+    has_system_message = any(isinstance(msg, SystemMessage) for msg in messages)
+    
+    # Add system message on first call if not present
+    if not has_system_message:
+        system_msg = SystemMessage(
+            content="You are a supply chain risk analysis agent. After gathering information with tools, "
+                   "you MUST provide a clear summary response. Do not make endless tool calls - provide "
+                   "an assessment after collecting sufficient data (usually after 5-8 tool calls)."
+        )
+        messages = [system_msg] + messages
+    
+    # If we've made many tool calls but no final response yet, add a reminder
+    if tool_call_count >= 12:
+        reminder = SystemMessage(
+            content="IMPORTANT: You have made many tool calls. Stop now and provide your final assessment "
+                   "and summary based on all the information you've collected. Do not make more tool calls."
+        )
+        messages = messages + [reminder]
+    
+    return {"messages": [llm_with_tools.invoke(messages)]}
 
 # ... Build the Graph ...
 builder = StateGraph(AgentState)

@@ -106,33 +106,45 @@ print("AGENT CONVERSATION FLOW")
 print("=" * 60)
 
 # Print all messages to see the conversation flow
+print(f"\nTotal messages: {len(result['messages'])}")
+print(f"Last message type: {result['messages'][-1].__class__.__name__}\n")
+
 for i, message in enumerate(result["messages"]):
     print(f"\n--- Message {i+1}: {message.__class__.__name__} ---")
     
     # Handle different message types
-    if hasattr(message, 'content') and message.content:
-        content = message.content
-        # Deduplicate content if it's repeated (some LLMs occasionally duplicate their responses)
-        # This happens when the LLM generates the same response twice in a row
-        if isinstance(content, str) and len(content) > 200:
-            # Get the first ~100 chars as a signature to search for duplicates
-            signature = content[:100].strip()
-            # Find where this signature appears again (indicating duplicate)
-            second_occurrence = content.find(signature, 100)
-            
-            if second_occurrence > 0:
-                # Check if the text from second occurrence onwards matches the beginning
-                # This would indicate a full duplicate
-                remaining = content[second_occurrence:]
-                beginning = content[:second_occurrence]
+    if hasattr(message, 'content'):
+        if message.content:
+            content = message.content
+            # Deduplicate content if it's repeated (some LLMs occasionally duplicate their responses)
+            # This happens when the LLM generates the same response twice in a row
+            if isinstance(content, str) and len(content) > 200:
+                # Get the first ~100 chars as a signature to search for duplicates
+                signature = content[:100].strip()
+                # Find where this signature appears again (indicating duplicate)
+                second_occurrence = content.find(signature, 100)
                 
-                # If remaining is similar length and starts the same, it's likely a duplicate
-                if len(remaining) > len(beginning) * 0.8 and remaining[:len(beginning)] == beginning:
-                    content = beginning.strip()
-                elif remaining[:200] == beginning[:200]:  # First 200 chars match = likely duplicate
-                    content = beginning.strip()
-        
-        print(f"Content: {content}")
+                if second_occurrence > 0:
+                    # Check if the text from second occurrence onwards matches the beginning
+                    # This would indicate a full duplicate
+                    remaining = content[second_occurrence:]
+                    beginning = content[:second_occurrence]
+                    
+                    # If remaining is similar length and starts the same, it's likely a duplicate
+                    if len(remaining) > len(beginning) * 0.8 and remaining[:len(beginning)] == beginning:
+                        content = beginning.strip()
+                    elif remaining[:200] == beginning[:200]:  # First 200 chars match = likely duplicate
+                        content = beginning.strip()
+            
+            print(f"Content: {content}")
+        else:
+            # Message has no content - this might indicate the agent is waiting or stuck
+            print(f"Content: <empty or None>")
+            if hasattr(message, 'tool_calls') and message.tool_calls:
+                # print(f"⚠️  Warning: AIMessage has no content but has tool calls - agent may be in progress")
+                pass
+            else:
+                print(f"⚠️  Warning: AIMessage has no content and no tool calls - this might indicate an issue")
     
     # Extract tool calls from AIMessage
     if hasattr(message, 'tool_calls') and message.tool_calls:
@@ -144,4 +156,20 @@ for i, message in enumerate(result["messages"]):
     # ToolMessage contains tool execution results
     if hasattr(message, 'tool_call_id'):
         print(f"Tool Call ID: {message.tool_call_id}")
+
+# Check if we have a final response
+print("\n" + "=" * 60)
+print("FINAL STATUS")
+print("=" * 60)
+last_message = result["messages"][-1]
+if hasattr(last_message, 'content') and last_message.content:
+    print("✅ Agent completed successfully with final response")
+else:
+    print("⚠️  Agent completed but final message has no content")
+    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        print(f"   Last message has {len(last_message.tool_calls)} pending tool call(s)")
+    print("   This may indicate:")
+    print("   - Agent hit recursion limit (check for GraphRecursionError)")
+    print("   - LLM didn't generate a final response")
+    print("   - Agent is waiting for tool execution")
 

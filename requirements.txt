@@ -7,3 +7,5 @@ langgraph
 matplotlib
 scipy
 python-dotenv
+graphviz
+streamlit
