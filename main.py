@@ -41,13 +41,14 @@ import os
 # Fix tokenizer warning about parallelism after forking
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-from agent import agent
+from agent import agent, launch_risk_map_ui
 from langchain_core.messages import HumanMessage
 
-query = "Assess the impact of a strike at the Port of mexico city on our supply chain. FYI: my print out viewing window is very small, so please make it easy to read."
+query = "Assess the impact of a strike (geopolitical risk, strike, riots, etc.) at all San Diego location on our supply chain. FYI: my print out viewing window is very small, so please make it easy to read."
 print("Query:")
 print(query)
 print("=" * 60)
+print(launch_risk_map_ui())
 
 try:
     # Configure recursion limit to prevent infinite loops

@@ -210,3 +210,7 @@ __marimo__/
 temp.py
 temp.ipynb
 agent_v2.py
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store

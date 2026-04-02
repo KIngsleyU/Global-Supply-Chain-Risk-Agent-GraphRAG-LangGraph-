@@ -1,0 +1,188 @@
+(base) kingsleyumeh@Ogechukwus-MacBook-Pro Global-Supply-Chain-Risk-Agent-GraphRAG-LangGraph- % python main.py
+Generated 23 locations, 41 suppliers, 84 products
+Indexed 84 products in ChromaDB.
+Indexed 41 suppliers in ChromaDB.
+Indexed 23 locations in ChromaDB.
+
+Query:
+Assess the impact of a strike (geopolitical risk, strike, riots, etc.) at all San Diego location on our supply chain. FYI: my print out viewing window is very small, so please make it easy to read.
+============================================================
+Launched Global Supply Chain Risk Map at http://localhost:8501 (rendering graph snapshot from /var/folders/8m/822nn01n0_j8fz4030gytz040000gn/T/supply_chain_graph.dot)
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8504
+  Network URL: http://10.0.0.136:8504
+
+Generated 29 locations, 61 suppliers, 125 products
+2026-04-02 11:24:39.002 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+
+============================================================
+AGENT CONVERSATION FLOW
+============================================================
+
+Total messages: 18
+Last message type: AIMessage
+
+
+--- Message 1: HumanMessage ---
+Content: Assess the impact of a strike (geopolitical risk, strike, riots, etc.) at all San Diego location on our supply chain. FYI: my print out viewing window is very small, so please make it easy to read.
+
+--- Message 2: AIMessage ---
+Content: I'll help you assess the impact of a strike at San Diego locations on your supply chain. Let me start by identifying all San Diego locations and then analyze their connections.
+
+Tool Calls: 1
+  - Tool: retrieve_location_info
+    Args: {'query': 'San Diego'}
+
+--- Message 3: ToolMessage ---
+Content: ["Location(name='San Diego Factory', country='United States')", "Location(name='San Diego Production Center', country='United States')", "Location(name='San Diego Manufacturing Facility', country='United States')", "Location(name='Mexico City Production Center', country='Mexico')", "Location(name='Long Beach Port', country='United States')"]
+Tool Call ID: call_13caba64d7bd4a9eaa0a0d5b
+
+--- Message 4: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'San Diego Factory'}
+
+--- Message 5: ToolMessage ---
+Content: ["Supplier(name='Stuart-Bowman', risk_score=0.7, revenue=9924860.22)"]
+Tool Call ID: call_f73221000bb047929abda042
+
+--- Message 6: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'San Diego Production Center'}
+
+--- Message 7: ToolMessage ---
+Content: ["Supplier(name='Hansen-Knight', risk_score=0.99, revenue=3089449.28)"]
+Tool Call ID: call_6490b5779f5b44f28d86f475
+
+--- Message 8: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'San Diego Manufacturing Facility'}
+
+--- Message 9: ToolMessage ---
+Content: ["Supplier(name='Wallace Group', risk_score=0.26, revenue=5413081.44)"]
+Tool Call ID: call_56e310f880da402dbcf8590e
+
+--- Message 10: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: exploreAffected Suppliers:
+- Stuart-Bowman (risk score: 0.7, revenue: $9.9M)
+- Hansen-Knight (risk score: 0.99, revenue: $3.1M) 
+- Wallace Group (risk score: 0.26, strike risk: $5.4M)
+
+Total revenue impact: $18.4M
+
+Key risks:
+- Hansen-Knight has highest risk score (0.99)
+- Stuart-Bowman represents largest revenue exposure ($9.9M)
+- Wallace Group has lowest risk but still significant exposure
+
+Mitigation recommendations:
+1. Contact Hansen-Knight immediately - highest risk
+2. Diversify away from Stuart-Bowman due to high revenue exposure
+3. Monitor Wallace Group as backup option
+4. Explore alternative suppliers in region
+5. Review inventory buffers for critical components</think>
+<tool_call>explore_graph_connections
+    Args: {'node_name': 'Stuart-Bowman'}
+
+--- Message 11: ToolMessage ---
+Content: Error: exploreAffected Suppliers:
+- Stuart-Bowman (risk score: 0.7, revenue: $9.9M)
+- Hansen-Knight (risk score: 0.99, revenue: $3.1M) 
+- Wallace Group (risk score: 0.26, strike risk: $5.4M)
+
+Total revenue impact: $18.4M
+
+Key risks:
+- Hansen-Knight has highest risk score (0.99)
+- Stuart-Bowman represents largest revenue exposure ($9.9M)
+- Wallace Group has lowest risk but still significant exposure
+
+Mitigation recommendations:
+1. Contact Hansen-Knight immediately - highest risk
+2. Diversify away from Stuart-Bowman due to high revenue exposure
+3. Monitor Wallace Group as backup option
+4. Explore alternative suppliers in region
+5. Review inventory buffers for critical components</think>
+<tool_call>explore_graph_connections is not a valid tool, try one of [retrieve_product_info, retrieve_supplier_info, retrieve_location_info, explore_graph_connections].
+Tool Call ID: call_392048add2374015a7cf02c7
+
+--- Message 12: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'Stuart-Bowman'}
+
+--- Message 13: ToolMessage ---
+Content: ["Location(name='San Diego Factory', country='United States')", "Product(name='Stainless Steel Fastener Kit 4655', sku='I-44026', price=1062.13)", "Product(name='Medical-Grade Nitrile Gloves 4750', sku='P-16140', price=706.3)", "Product(name='Pressure Relief Valve 3332', sku='I-85039', price=1636.03)"]
+Tool Call ID: call_c81e6cd79daf4c159cfda4c1
+
+--- Message 14: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'Hansen-Knight'}
+
+--- Message 15: ToolMessage ---
+Content: ["Location(name='San Diego Production Center', country='United States')", "Product(name='Cold Chain Vaccine Carrier 6768', sku='P-26729', price=389.98)", "Product(name='Power Supply Unit 9762', sku='E-17582', price=254.81)"]
+Tool Call ID: call_fceae2edbfef4b6f8a74fbb0
+
+--- Message 16: AIMessage ---
+Content: <empty or None>
+Tool Calls: 1
+  - Tool: explore_graph_connections
+    Args: {'node_name': 'Wallace Group'}
+
+--- Message 17: ToolMessage ---
+Content: ["Location(name='San Diego Manufacturing Facility', country='United States')", "Product(name='CNC Spindle Motor 6258', sku='I-64994', price=2028.1)", "Product(name='Tamper-Evident Seal Roll 5263', sku='P-70588', price=177.75)"]
+Tool Call ID: call_3217d35dd8f143ae9812bcaa
+
+--- Message 18: AIMessage ---
+Content: # San Diego Strike Impact Assessment
+
+## Affected Locations
+- San Diego Factory
+- San Diego Production Center  
+- San Diego Manufacturing Facility
+
+## Impacted Suppliers & Revenue
+1. **Stuart-Bowman** - $9.9M revenue (risk: 0.7)
+2. **Hansen-Knight** - $3.1M revenue (risk: 0.99)
+3. **Wallace Group** - $5.4M revenue (risk: 0.26)
+
+**Total Revenue Impact: $18.4M**
+
+## Critical Products at Risk
+- Medical-Grade Nitrile Gloves
+- Stainless Steel Fastener Kit
+- Cold Chain Vaccine Carrier
+- CNC Spindle Motor
+- Pressure Relief Valve
+
+## Key Risk Factors
+- **Hansen-Knight** poses highest risk (0.99 score)
+- **Stuart-Bowman** represents largest revenue exposure
+- All three suppliers directly affected by San Diego operations
+
+## Immediate Actions
+1. Contact Hansen-Knight immediately - highest risk
+2. Diversify Stuart-Bowman supply due to high revenue impact
+3. Monitor Wallace Group as backup option
+4. Review inventory buffers for critical medical components
+
+============================================================
+FINAL STATUS
+============================================================
+✅ Agent completed successfully with final response

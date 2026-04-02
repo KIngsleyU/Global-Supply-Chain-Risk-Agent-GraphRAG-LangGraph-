@@ -38,14 +38,15 @@ The project uses **NetworkX** (in-memory directed graph) to simulate a graph dat
 
 ```
 .
-├── schema.py          # ✅ Data Models (Nodes) - IMPLEMENTED
-├── graph_ops.py       # ✅ NetworkX Graph Operations - IMPLEMENTED
-├── vector_ops.py      # ✅ ChromaDB Logic (Vector Search) - IMPLEMENTED
-├── agent.py           # ✅ LangGraph Agent - IMPLEMENTED
-├── main.py            # ✅ Entry Point - WORKING
-├── app.py             # ✅ Streamlit Web App - IMPLEMENTED
-├── requirements.txt   # ✅ Dependencies
-└── README.md          # Project documentation
+├── schema.py          # Data models (Supplier, Product, Location)
+├── graph_ops.py       # NetworkX graph and synthetic data generation
+├── graph_viz.py       # Graphviz builder shared by Streamlit and the agent
+├── vector_ops.py      # ChromaDB vector stores (product, supplier, location)
+├── agent.py           # LangGraph agent, tools, and optional Streamlit launcher
+├── main.py            # CLI entry: launches risk map UI, then runs the agent
+├── app.py             # Streamlit “Global Supply Chain Risk Map”
+├── requirements.txt   # Python dependencies
+└── README.md          # This file
 ```
 
 ## Components
@@ -93,7 +94,8 @@ Implements the `SupplyChainGraph` class for managing the knowledge graph:
 - Supports adding nodes (Supplier, Product, Location) and edges with type labels
 - Provides comprehensive data generation methods for synthetic supply chain data
 - Maintains internal state for locations, suppliers, and products
-- Uses Faker library for realistic data generation
+- **Locations and suppliers**: Faker generates company names and facility/port-style location names
+- **Products**: Category-based catalog (Electronics, Automotive, Pharmaceutical, Industrial, Packaging, Energy) with realistic item names, **prefixed SKUs** (e.g., category initials + number), and **category-specific price ranges** (not a single flat \$100–\$1,000 band)
 
 **API:**
 
@@ -115,7 +117,7 @@ Implements the `SupplyChainGraph` class for managing the knowledge graph:
 
 - **Locations**: Generates 20-30 locations including ports (e.g., "Port of Shanghai"), warehouses (e.g., "Hamburg Warehouse"), and manufacturing facilities (e.g., "Shenzhen Manufacturing Facility")
 - **Suppliers**: 1-3 suppliers per location with random risk scores (0-1) and revenue ($100K-$10M)
-- **Products**: 1-3 products per supplier with unique SKUs and prices ($100-$1,000)
+- **Products**: 1-3 products per supplier; names combine a catalog line item with a numeric suffix; SKUs use a category prefix; prices are drawn from per-category min/max ranges
 - All numeric values are rounded to 2 decimal places for consistency
 
 **Example Usage:**
@@ -149,6 +151,18 @@ graph.add_node(location)
 graph.add_edge(supplier, location, edge_type="LOCATED_AT")
 graph.add_edge(supplier, product, edge_type="MANUFACTURES")
 ```
+
+### graph_viz.py
+
+Centralizes **Graphviz** rendering so the same layout is used from Streamlit and from the agent:
+
+- **`build_supply_chain_graphviz(graph_db, risk_threshold=0.6)`** returns a `graphviz.Digraph` with:
+  - Locations: blue boxes
+  - Suppliers: red if `risk_score > threshold`, else green (risk shown in label when red)
+  - Products: yellow ovals with name and price
+  - Edges: `LOCATED_AT` (supplier → location); supplier → product edges are labeled **`MAKES`** in the diagram for readability (the underlying graph in `graph_ops` still uses edge type **`MANUFACTURES`**)
+
+The module can be run as a script to print DOT source or render a PNG (`supply_chain_graph.png`) for offline inspection.
 
 ### vector_ops.py
 
@@ -236,8 +250,9 @@ Implements the LangGraph agent for supply chain risk analysis using graph traver
 - Integrates with OpenRouter API for free LLM access (configurable model, default: `z-ai/glm-4.5-air:free`)
 - Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
 - Auto-initializes graph and all three vector stores (product, supplier, location) with synthetic data on import
-- Semantic matching fallback for fuzzy entity lookups (handles misspellings automatically)
+- Retrieval tools provide fuzzy/semantic lookup; graph traversal uses exact names unless you resolve names via those tools first
 - System message integration to guide LLM behavior and encourage final summaries
+- **`launch_risk_map_ui(risk_threshold=0.6)`** (helper, not a LangGraph tool): serializes the **current in-memory** `graph_db` to a temporary **`supply_chain_graph.dot`** file, sets environment variables **`SC_GRAPH_DOT_PATH`** and **`SC_GRAPH_THRESHOLD`**, and starts **`streamlit run app.py`** as a subprocess so the browser shows the **same graph** as the agent process (avoids regenerating a second random world in the UI)
 
 **Tools Implemented:**
 
@@ -253,11 +268,10 @@ Implements the LangGraph agent for supply chain risk analysis using graph traver
    - Handles location name variations (e.g., "Port of mexico city" → "Mexico City Manufacturing Facility")
    - Returns top 5 similar locations with country information
 
-4. **`explore_graph_connections(node_name)`** - Graph traversal with semantic fallback
-   - Tries exact match first using `graph_db.get_node_by_name()`
-   - If not found, uses semantic search via vector stores (location → supplier → product)
-   - Informs LLM when similar match is used instead of exact match
-   - Returns connected nodes (neighbors) as strings for LLM readability
+4. **`explore_graph_connections(node_name)`** - Graph neighbor lookup via NetworkX
+   - Resolves the node with **`graph_db.get_node_by_name()`** (exact name match on supplier, location, or product)
+   - If no exact match, returns guidance to use **`retrieve_location_info`**, **`retrieve_supplier_info`**, or **`retrieve_product_info`** for fuzzy resolution, then call again with the resolved name
+   - Returns all **neighbors** (`nx.all_neighbors`) as strings when a node is found
 
 **Architecture:**
 
@@ -307,6 +321,7 @@ Entry point module that orchestrates the LangGraph agent execution for supply ch
 
 **Key Features:**
 
+- Calls **`launch_risk_map_ui()`** from `agent.py` after printing the query, which opens the Streamlit risk map (default http://localhost:8501) using a DOT snapshot of the agent’s graph
 - Initializes and invokes the LangGraph agent with user queries
 - Displays comprehensive conversation flow including all messages, tool calls, and responses
 - Handles errors gracefully with informative messages for different failure scenarios
@@ -339,14 +354,14 @@ Entry point module that orchestrates the LangGraph agent execution for supply ch
 **Example Usage:**
 
 ```bash
-# Run the agent with the predefined query
+# Run the agent with the predefined query (also launches the Streamlit risk map)
 python main.py
 
-# The agent will:
-# 1. Load pre-initialized graph and vector stores
-# 2. Process the query about supply chain disruptions
+# The script will:
+# 1. Print the query and launch the Global Supply Chain Risk Map (Streamlit) if Graphviz/Streamlit are available
+# 2. Load pre-initialized graph and vector stores and run the agent
 # 3. Display the full conversation flow with tool calls
-# 4. Show the final risk assessment (if LLM provides one)
+# 4. Show the final risk assessment (if the LLM provides one)
 ```
 
 ### app.py
@@ -356,7 +371,7 @@ Streamlit web application for interactive supply chain risk visualization:
 **Key Features:**
 
 - Interactive web-based visualization of the supply chain graph
-- Risk threshold slider to highlight suppliers with risk scores above a configurable threshold
+- Risk threshold slider (used when **not** loading an agent snapshot) to highlight suppliers with risk scores above a configurable threshold
 - Color-coded visualization:
   - Blue boxes: Locations
   - Red boxes: High-risk suppliers (risk_score > threshold)
@@ -364,26 +379,28 @@ Streamlit web application for interactive supply chain risk visualization:
   - Yellow ovals: Products with pricing information
 - Directed graph visualization showing relationships:
   - Supplier → LOCATED_AT → Location
-  - Supplier → MANUFACTURES → Product
+  - Supplier → product edges (stored as **MANUFACTURES** in `graph_ops`; diagram edge label **MAKES** via `graph_viz.py`)
+
+**Two rendering modes:**
+
+1. **Standalone** (`streamlit run app.py` with no snapshot env): loads data with `@st.cache_resource` → `SupplyChainGraph().generate_data()`, builds the graph with `build_supply_chain_graphviz`, and the **sidebar slider** controls the threshold for coloring.
+2. **Agent snapshot** (when **`SC_GRAPH_DOT_PATH`** points to an existing `.dot` file, as set by `launch_risk_map_ui`): reads the DOT string from disk and passes it to `st.graphviz_chart`. The visualization matches the agent’s in-memory graph at launch time; the caption shows the snapshot path.
 
 **Architecture:**
 
 - Uses Streamlit for web interface and user interaction
-- Uses Graphviz via streamlit's `graphviz_chart` for graph rendering
-- Integrates with `SupplyChainGraph` from `graph_ops` module for data access
-- Caches graph data using `@st.cache_resource` for performance
+- Uses Graphviz via Streamlit’s `graphviz_chart` for graph rendering
+- Uses `graph_viz.build_supply_chain_graphviz` for non-snapshot mode
+- Integrates with `SupplyChainGraph` from `graph_ops` for standalone data access
+- Caches graph data using `@st.cache_resource` for performance (standalone mode only)
 
 **Usage:**
 
 ```bash
-# Run the Streamlit application
+# Standalone: generate its own world and use the sidebar threshold
 streamlit run app.py
 
-# The application will:
-# 1. Generate or load supply chain data using SupplyChainGraph
-# 2. Display an interactive graph visualization
-# 3. Allow users to adjust risk threshold via sidebar slider
-# 4. Update the visualization to highlight suppliers based on risk threshold
+# From Python (same graph as agent): see launch_risk_map_ui in agent.py
 ```
 
 ## Installation
@@ -414,21 +431,24 @@ pip install -r requirements.txt
 
    ```bash
    OPENROUTER_API_KEY=your_api_key_here
+   # Optional: override the chat model (default in code: z-ai/glm-4.5-air:free)
+   # OPENROUTER_MODEL=deepseek/deepseek-chat-v3:free
    ```
 
 ### Dependencies
 
-- `networkx` - Graph database simulation and algorithms
-- `chromadb` - Vector database for semantic search
-- `faker` - Synthetic data generation for testing
+- `networkx` - In-memory directed graph and traversal
+- `chromadb` - Vector database for semantic search (Ephemeral client)
+- `faker` - Synthetic company names, locations, and product SKU suffixes
 - `langchain` - LLM framework integration
-- `langchain-openai` - OpenAI-compatible API integration for OpenRouter
+- `langchain-openai` - OpenAI-compatible client for OpenRouter
 - `langgraph` - Agent orchestration and state management
-- `matplotlib` - Graph visualization
-- `scipy` - Scientific computing utilities
-- `python-dotenv` - Environment variable management from `.env` files
-- `graphviz` - Graph visualization library (for Streamlit app)
-- `streamlit` - Web application framework (for interactive visualization)
+- `python-dotenv` - Load `OPENROUTER_API_KEY` and optional `OPENROUTER_MODEL` from `.env`
+- `graphviz` - Python package used with `graph_viz.py` and Streamlit’s `graphviz_chart`
+- `streamlit` - Web UI for the risk map
+- `matplotlib` / `scipy` - Listed in `requirements.txt` (not imported by the core modules in this repo; may satisfy transitive needs or local experiments)
+
+**System requirement:** the Graphviz **engine** (`dot`) must be installed on your machine for Streamlit to render charts (e.g., `brew install graphviz` on macOS).
 
 ## Current Status
 
@@ -474,15 +494,16 @@ pip install -r requirements.txt
 
 - `agent.py` - Fully implemented LangGraph agent with module-level docstring
 - LangGraph `StateGraph` with `AgentState` and message-based conversation flow
+- `launch_risk_map_ui()` integrates Streamlit with the same `graph_db` instance via a temporary DOT file
 - Four tools implemented:
   - `retrieve_product_info(query)` - Semantic product search via ProductVectorStore
   - `retrieve_supplier_info(query)` - Semantic supplier search via SupplierVectorStore
   - `retrieve_location_info(query)` - Semantic location search via LocationVectorStore
-  - `explore_graph_connections(node_name)` - Graph traversal with semantic fallback
+  - `explore_graph_connections(node_name)` - Neighbor traversal after exact name match
 - Uses LangGraph's pre-built `ToolNode` and `tools_condition` for tool execution
 - Integrated with OpenRouter API (default: `z-ai/glm-4.5-air:free`, configurable via `OPENROUTER_MODEL`)
 - Auto-initialization of graph and all three vector stores on module import
-- Semantic matching fallback in `explore_graph_connections()` handles misspellings automatically
+- `explore_graph_connections()` uses exact node names; misspellings are handled by the three `retrieve_*` tools
 - System message integration to guide LLM behavior and encourage final summaries after tool calls
 - Exact match detection in retrieval tools for optimal performance
 
@@ -498,11 +519,13 @@ pip install -r requirements.txt
 
 ### ✅ Phase 6: Web Visualization - COMPLETE
 
-- `app.py` - Streamlit web application with module-level docstring
-- Interactive graph visualization using Graphviz
-- Risk threshold slider for dynamic filtering
+- `graph_viz.py` - Shared Graphviz builder (`build_supply_chain_graphviz`) for Streamlit and the agent
+- `app.py` - Streamlit “Global Supply Chain Risk Map” with standalone (cached `generate_data`) or **DOT snapshot** mode via `SC_GRAPH_DOT_PATH`
+- `agent.py` - `launch_risk_map_ui()` writes a temp `.dot` file and spawns Streamlit so the UI matches the agent’s graph
+- Interactive graph visualization using Graphviz (`st.graphviz_chart`)
+- Risk threshold slider for dynamic filtering in standalone mode
 - Color-coded visualization (locations, suppliers, products)
-- Graph data caching for performance
+- Graph data caching for performance (`@st.cache_resource`) in standalone mode
 
 ## Development Roadmap
 
@@ -512,7 +535,7 @@ pip install -r requirements.txt
 - [X] Working entry point with error handling and diagnostics (Phase 5)
 - [X] Streamlit web application for graph visualization (Phase 6)
 - [X] Basic graph traversal methods (`explore_graph_connections`, `get_node_by_name`)
-- [X] Semantic matching for fuzzy entity lookups (handles misspellings automatically)
+- [X] Semantic matching via retrieval tools for fuzzy entity lookups
 - [X] Three vector stores for products, suppliers, and locations
 - [X] Exact match detection in retrieval tools for optimal performance
 - [X] System message integration for LLM guidance
@@ -592,7 +615,7 @@ from agent import agent
 from langchain_core.messages import HumanMessage
 
 # Agent automatically initializes with graph and all three vector stores
-# Query the agent (semantic matching handles misspellings automatically)
+# Retrieval tools handle fuzzy queries; explore_graph_connections needs exact names
 result = agent.invoke({
     "messages": [HumanMessage(content="Assess the impact of a strike at the Port of mexico city")]
 }, config={"recursion_limit": 50})
@@ -607,19 +630,23 @@ for message in result["messages"]:
             print(f"Tool: {tool_call.get('name')} with args: {tool_call.get('args')}")
 ```
 
-**Note**: The agent uses semantic matching, so queries like "Port of mexico city" will automatically find similar locations like "Mexico City Manufacturing Facility" even with misspellings or variations.
+**Note**: The **`retrieve_*`** tools use semantic search, so natural-language or misspelled queries can still surface the right entities. **`explore_graph_connections`** expects an exact graph node name (use a `retrieve_*` tool first if you only have a fuzzy description).
 
 ### Example: Using the Streamlit Web App
 
 ```bash
-# Launch the interactive visualization
+# Standalone: the app generates and caches its own supply chain world
 streamlit run app.py
 
 # The app will:
-# 1. Load supply chain data (cached after first run)
-# 2. Display interactive graph visualization
-# 3. Allow you to adjust risk threshold slider
-# 4. Show suppliers above threshold in red
+# 1. Load supply chain data (cached after first run via @st.cache_resource)
+# 2. Display the graph; use the sidebar slider to change the risk threshold
+# 3. Show suppliers above threshold in red
+
+# To see the same graph as the agent (from Python):
+#   from agent import launch_risk_map_ui
+#   print(launch_risk_map_ui(0.6))
+# Then open http://localhost:8501 — rendering uses the DOT snapshot from agent.py
 ```
 
 ### Example: Manual Graph Construction

@@ -20,14 +20,12 @@ Tools:
 - explore_graph_connections(node_name): Graph traversal to find connected nodes via NetworkX (uses semantic matching when exact match fails)
 
 LLM Configuration:
-- Uses OpenRouter API with GPT-OSS 120B free model
-- Requires OPENROUTER_API_KEY environment variable
-- Model: openai/gpt-oss-120b:free
+- Uses OpenRouter API (OpenAI-compatible ChatOpenAI client)
+- Requires OPENROUTER_API_KEY; optional OPENROUTER_MODEL (default: z-ai/glm-4.5-air:free)
 
 Initialization:
 - Automatically generates synthetic supply chain data on module import
-- Initializes graph with 20-30 locations, suppliers, and products
-- Indexes all products, suppliers, and locations in their respective vector stores for semantic search
+- Initializes SupplyChainGraph and indexes products, suppliers, and locations in vector stores
 
 Example:
     >>> from agent import agent
@@ -46,6 +44,7 @@ Example:
 from typing import TypedDict, Annotated
 from langgraph.graph.message import add_messages
 from graph_ops import SupplyChainGraph
+from graph_viz import build_supply_chain_graphviz
 from vector_ops import ProductVectorStore, SupplierVectorStore, LocationVectorStore
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph
@@ -54,6 +53,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from dotenv import load_dotenv
 import os
+import subprocess
+import tempfile
 
 # Fix tokenizer warning about parallelism after forking
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -166,34 +167,35 @@ def explore_graph_connections(node_name: str):
     matched_via_semantic = False
     
     # If not found, use semantic search via vector stores
+    # if not found_node:
+    #     # Try location vector store first (most common use case)
+    #     locations = location_vector_db.get_locations(node_name, k=1)
+    #     if locations:
+    #         found_node = graph_db.get_node_by_name(locations[0].name)
+    #         matched_via_semantic = True
+        
+    #     # If still not found, try supplier vector store
+    #     if not found_node:
+    #         suppliers = supplier_vector_db.get_suppliers(node_name, k=1)
+    #         if suppliers:
+    #             found_node = graph_db.get_node_by_name(suppliers[0].name)
+    #             matched_via_semantic = True
+        
+    #     # If still not found, try product vector store
+    #     if not found_node:
+    #         products = product_vector_db.get_products(node_name, k=1)
+    #         if products:
+    #             found_node = graph_db.get_node_by_name(products[0].name)
+    #             matched_via_semantic = True
+        
+    # If still no match - suggest using retrieve_location_info or retrieve_supplier_info
     if not found_node:
-        # Try location vector store first (most common use case)
-        locations = location_vector_db.get_locations(node_name, k=1)
-        if locations:
-            found_node = graph_db.get_node_by_name(locations[0].name)
-            matched_via_semantic = True
-        
-        # If still not found, try supplier vector store
-        if not found_node:
-            suppliers = supplier_vector_db.get_suppliers(node_name, k=1)
-            if suppliers:
-                found_node = graph_db.get_node_by_name(suppliers[0].name)
-                matched_via_semantic = True
-        
-        # If still not found, try product vector store
-        if not found_node:
-            products = product_vector_db.get_products(node_name, k=1)
-            if products:
-                found_node = graph_db.get_node_by_name(products[0].name)
-                matched_via_semantic = True
-        
-        # If still no match - suggest using retrieve_location_info or retrieve_supplier_info
-        if not found_node:
-            return [
-                f"No node found matching '{node_name}' (exact or similar).\n"
-                f"Try using retrieve_location_info('{node_name}') to find similar locations, "
-                f"or retrieve_supplier_info('{node_name}') to find similar suppliers."
-            ]
+        return [
+            f"No node found matching '{node_name}' (exact or similar).\n"
+            f"Try using retrieve_location_info('{node_name}') to find similar locations, "
+            f"or retrieve_supplier_info('{node_name}') to find similar suppliers, "
+            f"or retrieve_product_info('{node_name}') to find similar products."
+        ]
     
     neighbors = list(nx.all_neighbors(graph_db.graph, found_node))
     if not neighbors:
@@ -205,12 +207,41 @@ def explore_graph_connections(node_name: str):
     # If matched via semantic search, inform the LLM about the similarity match
     if matched_via_semantic:
         return [
-            f"Note: No exact match for '{node_name}', but found a semantically similar node: {found_node.name}, and this semantically similar node has connections to the following nodes:\n"
+            f"Note: No exact match for '{node_name}', but found a semantically similar node: {found_node}, and this semantically similar node has connections to the following nodes:\n"
             f"Connected nodes:\n" + "\n".join(connected_nodes)
         ]
     
     # Exact match - return just the connected nodes
     return connected_nodes
+
+
+def launch_risk_map_ui(risk_threshold: float = 0.6):
+    """
+    Launch the Streamlit visualization app for the generated supply chain graph.
+    This is a regular helper function (not a LangGraph tool).
+
+    Returns:
+        str: Status message with local URL.
+    """
+    try:
+        # Serialize the current in-memory graph visualization so app.py can render
+        # the same graph_db generated here instead of reinitializing its own.
+        dot = build_supply_chain_graphviz(graph_db, risk_threshold=risk_threshold)
+        dot_file = os.path.join(tempfile.gettempdir(), "supply_chain_graph.dot")
+        with open(dot_file, "w", encoding="utf-8") as f:
+            f.write(dot.source)
+
+        env = os.environ.copy()
+        env["SC_GRAPH_DOT_PATH"] = dot_file
+        env["SC_GRAPH_THRESHOLD"] = str(risk_threshold)
+
+        subprocess.Popen(["streamlit", "run", "app.py"], env=env)
+        return (
+            "Launched Global Supply Chain Risk Map at http://localhost:8501 "
+            f"(rendering graph snapshot from {dot_file})"
+        )
+    except Exception as e:
+        return f"Failed to launch Streamlit app: {e}"
 
 # Define the AgentState class: the State (The "Memory")
 # This is the memory of the agent. It is a list of messages.
@@ -229,7 +260,7 @@ tools = [
     retrieve_product_info,
     retrieve_supplier_info,
     retrieve_location_info,
-    explore_graph_connections
+    explore_graph_connections,
 ]
 
 

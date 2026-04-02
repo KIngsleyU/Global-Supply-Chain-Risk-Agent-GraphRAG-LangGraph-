@@ -206,16 +206,81 @@ class SupplyChainGraph:
         products = generate_products(suppliers)
         return products
         """
+        product_catalog = {
+            "Electronics": [
+                "Printed Circuit Board",
+                "Power Supply Unit",
+                "Semiconductor Sensor",
+                "Industrial Router",
+                "Battery Management Module",
+                "Servo Controller",
+            ],
+            "Automotive": [
+                "Brake Disc Assembly",
+                "Fuel Injection Pump",
+                "Wiring Harness",
+                "Transmission Gear Set",
+                "Engine Control Unit",
+                "Steering Column Module",
+            ],
+            "Pharmaceutical": [
+                "Active Pharmaceutical Ingredient",
+                "Sterile Syringe Kit",
+                "Diagnostic Reagent Pack",
+                "Medical-Grade Nitrile Gloves",
+                "Surgical Mask Carton",
+                "Cold Chain Vaccine Carrier",
+            ],
+            "Industrial": [
+                "Hydraulic Pump",
+                "Ball Bearing Set",
+                "Stainless Steel Fastener Kit",
+                "Conveyor Belt Roll",
+                "CNC Spindle Motor",
+                "Pressure Relief Valve",
+            ],
+            "Packaging": [
+                "Corrugated Shipping Carton",
+                "Pallet Wrap Film",
+                "Insulated Shipping Box",
+                "Tamper-Evident Seal Roll",
+                "Label Stock Roll",
+                "Reusable Plastic Crate",
+            ],
+            "Energy": [
+                "Solar Inverter Unit",
+                "Lithium-Ion Cell Pack",
+                "High-Voltage Cable Harness",
+                "Grid Monitoring Meter",
+                "Wind Turbine Bearing",
+                "EV Charging Connector",
+            ],
+        }
+
+        category_price_ranges = {
+            "Electronics": (80, 2500),
+            "Automotive": (60, 1800),
+            "Pharmaceutical": (15, 1200),
+            "Industrial": (40, 3200),
+            "Packaging": (5, 350),
+            "Energy": (120, 5000),
+        }
+
         for supplier in suppliers:
-            # generate 1-3 products for each supplier
             for _ in range(random.randint(1, 3)):
-                # Use Faker's unique to ensure SKUs are unique
-                sku = str(self.faker.unique.random_int(min=1000, max=99999))
-                
-                product = Product(
-                    name=self.faker.bs().title(), # 'bs' gives catchy product-like names
-                    sku=sku,
-                    price=round(random.uniform(100, 1000), 2))
+                category = random.choice(list(product_catalog.keys()))
+                base_name = random.choice(product_catalog[category])
+                model_code = self.faker.unique.random_int(min=100, max=9999)
+                name = f"{base_name} {model_code}"
+
+                sku_number = self.faker.unique.random_int(min=1000, max=99999)
+                sku_prefix = "".join(word[0] for word in category.split()).upper()
+                sku = f"{sku_prefix}-{sku_number}"
+
+                min_price, max_price = category_price_ranges[category]
+                price = round(random.uniform(min_price, max_price), 2)
+
+                product = Product(name=name, sku=sku, price=price)
                 self.add_node(product) # type: Product ignore
                 self.add_edge(supplier, product, "MANUFACTURES") # type: Product ignore
                 self.products.append(product)
