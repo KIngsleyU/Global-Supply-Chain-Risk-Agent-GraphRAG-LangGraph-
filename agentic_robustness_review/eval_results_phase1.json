@@ -1,0 +1,972 @@
+{
+  "agent_version": "phase1",
+  "ground_truth": {
+    "num_locations": 22,
+    "num_suppliers": 44,
+    "num_products": 81,
+    "countries": {
+      "Germany": [
+        "Port of Hamburg"
+      ],
+      "United States": [
+        "San Diego Manufacturing Facility",
+        "Atlanta Warehouse",
+        "Chicago Warehouse",
+        "Los Angeles Port"
+      ],
+      "Brazil": [
+        "S\u00e3o Paulo Warehouse"
+      ],
+      "Indonesia": [
+        "Jakarta Production Center"
+      ],
+      "China": [
+        "Hong Kong Port",
+        "Shanghai Port",
+        "Guangzhou Production Center"
+      ],
+      "Singapore": [
+        "Singapore Port",
+        "Port of Singapore"
+      ],
+      "Netherlands": [
+        "Amsterdam Warehouse",
+        "Amsterdam Logistics Hub",
+        "Rotterdam Port"
+      ],
+      "Japan": [
+        "Tokyo Logistics Hub"
+      ],
+      "Vietnam": [
+        "Ho Chi Minh City Production Center"
+      ],
+      "Thailand": [
+        "Bangkok Manufacturing Facility"
+      ],
+      "United Kingdom": [
+        "London Distribution Center"
+      ],
+      "Philippines": [
+        "Manila Factory"
+      ],
+      "United Arab Emirates": [
+        "Dubai Port"
+      ],
+      "India": [
+        "Mumbai Warehouse"
+      ]
+    },
+    "hierarchy": {
+      "Port of Hamburg": {
+        "country": "Germany",
+        "suppliers": {
+          "Moran-Webb": {
+            "risk_score": 0.66,
+            "revenue": 239183449.32,
+            "products": [
+              {
+                "name": "Fuel Injection Pump 4000",
+                "sku": "A-37152",
+                "price": 355.68
+              }
+            ]
+          }
+        }
+      },
+      "San Diego Manufacturing Facility": {
+        "country": "United States",
+        "suppliers": {
+          "Cobb, Fischer and Holloway": {
+            "risk_score": 0.08,
+            "revenue": 833571842.8,
+            "products": [
+              {
+                "name": "Wiring Harness 7494",
+                "sku": "A-60392",
+                "price": 1381.83
+              }
+            ]
+          },
+          "Evans-Carr": {
+            "risk_score": 0.72,
+            "revenue": 776306312.23,
+            "products": [
+              {
+                "name": "Stainless Steel Fastener Kit 3457",
+                "sku": "I-24473",
+                "price": 2381.67
+              },
+              {
+                "name": "Ball Bearing Set 5576",
+                "sku": "I-5740",
+                "price": 679.49
+              }
+            ]
+          }
+        }
+      },
+      "S\u00e3o Paulo Warehouse": {
+        "country": "Brazil",
+        "suppliers": {
+          "Young, Higgins and Woodard": {
+            "risk_score": 0.53,
+            "revenue": 458518497.97,
+            "products": [
+              {
+                "name": "High-Voltage Cable Harness 5195",
+                "sku": "E-53853",
+                "price": 724.99
+              },
+              {
+                "name": "Lithium-Ion Cell Pack 7908",
+                "sku": "E-74382",
+                "price": 1370.26
+              }
+            ]
+          },
+          "Woods, Hicks and Maldonado": {
+            "risk_score": 0.34,
+            "revenue": 483114025.91,
+            "products": [
+              {
+                "name": "Cold Chain Vaccine Carrier 138",
+                "sku": "P-24613",
+                "price": 584.87
+              },
+              {
+                "name": "Wind Turbine Bearing 7140",
+                "sku": "E-26275",
+                "price": 3605.85
+              }
+            ]
+          },
+          "Rodriguez-Shields": {
+            "risk_score": 0.26,
+            "revenue": 399429253.34,
+            "products": [
+              {
+                "name": "Engine Control Unit 1798",
+                "sku": "A-89454",
+                "price": 891.92
+              }
+            ]
+          }
+        }
+      },
+      "Jakarta Production Center": {
+        "country": "Indonesia",
+        "suppliers": {
+          "Allen-Novak": {
+            "risk_score": 0.57,
+            "revenue": 673717210.08,
+            "products": [
+              {
+                "name": "Lithium-Ion Cell Pack 4897",
+                "sku": "E-94099",
+                "price": 549.42
+              }
+            ]
+          }
+        }
+      },
+      "Hong Kong Port": {
+        "country": "China",
+        "suppliers": {
+          "Robinson, White and Carpenter": {
+            "risk_score": 0.32,
+            "revenue": 659334455.55,
+            "products": [
+              {
+                "name": "Lithium-Ion Cell Pack 4671",
+                "sku": "E-77770",
+                "price": 4850.02
+              },
+              {
+                "name": "Transmission Gear Set 2721",
+                "sku": "A-88980",
+                "price": 1496.67
+              }
+            ]
+          }
+        }
+      },
+      "Atlanta Warehouse": {
+        "country": "United States",
+        "suppliers": {
+          "Davis-Miller": {
+            "risk_score": 0.42,
+            "revenue": 780072575.88,
+            "products": [
+              {
+                "name": "Solar Inverter Unit 7281",
+                "sku": "E-52875",
+                "price": 1423.9
+              },
+              {
+                "name": "Tamper-Evident Seal Roll 1083",
+                "sku": "P-11915",
+                "price": 96.07
+              }
+            ]
+          }
+        }
+      },
+      "Singapore Port": {
+        "country": "Singapore",
+        "suppliers": {
+          "Knapp-Norris": {
+            "risk_score": 0.28,
+            "revenue": 10882673.31,
+            "products": [
+              {
+                "name": "Active Pharmaceutical Ingredient 710",
+                "sku": "P-48285",
+                "price": 867.59
+              },
+              {
+                "name": "Pressure Relief Valve 1588",
+                "sku": "I-94987",
+                "price": 2220.59
+              }
+            ]
+          },
+          "Crawford LLC": {
+            "risk_score": 0.99,
+            "revenue": 477364136.97,
+            "products": [
+              {
+                "name": "Tamper-Evident Seal Roll 7923",
+                "sku": "P-19814",
+                "price": 197.07
+              },
+              {
+                "name": "Hydraulic Pump 2693",
+                "sku": "I-99838",
+                "price": 2503.52
+              }
+            ]
+          },
+          "Robinson PLC": {
+            "risk_score": 0.24,
+            "revenue": 732349277.05,
+            "products": [
+              {
+                "name": "Brake Disc Assembly 4879",
+                "sku": "A-35878",
+                "price": 1111.29
+              },
+              {
+                "name": "Solar Inverter Unit 8657",
+                "sku": "E-60193",
+                "price": 3519.31
+              },
+              {
+                "name": "Insulated Shipping Box 7528",
+                "sku": "P-14440",
+                "price": 322.81
+              }
+            ]
+          }
+        }
+      },
+      "Amsterdam Warehouse": {
+        "country": "Netherlands",
+        "suppliers": {
+          "Allen, Ballard and Henderson": {
+            "risk_score": 0.85,
+            "revenue": 117352765.27,
+            "products": [
+              {
+                "name": "Surgical Mask Carton 7967",
+                "sku": "P-94622",
+                "price": 733.31
+              }
+            ]
+          },
+          "English, Navarro and Sanchez": {
+            "risk_score": 0.95,
+            "revenue": 46964235.25,
+            "products": [
+              {
+                "name": "Fuel Injection Pump 2211",
+                "sku": "A-6817",
+                "price": 1300.53
+              },
+              {
+                "name": "Stainless Steel Fastener Kit 2865",
+                "sku": "I-18936",
+                "price": 1738.65
+              },
+              {
+                "name": "Power Supply Unit 6360",
+                "sku": "E-6006",
+                "price": 916.47
+              }
+            ]
+          }
+        }
+      },
+      "Tokyo Logistics Hub": {
+        "country": "Japan",
+        "suppliers": {
+          "Ford, Johnson and Ward": {
+            "risk_score": 0.46,
+            "revenue": 857193848.22,
+            "products": [
+              {
+                "name": "Semiconductor Sensor 6081",
+                "sku": "E-41698",
+                "price": 354.04
+              },
+              {
+                "name": "Cold Chain Vaccine Carrier 3585",
+                "sku": "P-71022",
+                "price": 727.11
+              },
+              {
+                "name": "Active Pharmaceutical Ingredient 428",
+                "sku": "P-12374",
+                "price": 601.37
+              }
+            ]
+          },
+          "Cochran PLC": {
+            "risk_score": 0.23,
+            "revenue": 764492982.98,
+            "products": [
+              {
+                "name": "Medical-Grade Nitrile Gloves 8857",
+                "sku": "P-77850",
+                "price": 457.12
+              }
+            ]
+          },
+          "Barnes, Gilbert and Henderson": {
+            "risk_score": 0.82,
+            "revenue": 829727134.45,
+            "products": [
+              {
+                "name": "Battery Management Module 134",
+                "sku": "E-55231",
+                "price": 2435.38
+              },
+              {
+                "name": "Corrugated Shipping Carton 2965",
+                "sku": "P-11781",
+                "price": 186.01
+              }
+            ]
+          }
+        }
+      },
+      "Shanghai Port": {
+        "country": "China",
+        "suppliers": {
+          "Chapman Ltd": {
+            "risk_score": 0.78,
+            "revenue": 948150329.26,
+            "products": [
+              {
+                "name": "Battery Management Module 9398",
+                "sku": "E-9142",
+                "price": 1370.23
+              },
+              {
+                "name": "Steering Column Module 4234",
+                "sku": "A-56491",
+                "price": 165.86
+              }
+            ]
+          },
+          "Mcpherson-Burns": {
+            "risk_score": 0.41,
+            "revenue": 856415701.86,
+            "products": [
+              {
+                "name": "Hydraulic Pump 8943",
+                "sku": "I-36559",
+                "price": 2160.26
+              },
+              {
+                "name": "Hydraulic Pump 5524",
+                "sku": "I-58144",
+                "price": 2807.26
+              },
+              {
+                "name": "Diagnostic Reagent Pack 3061",
+                "sku": "P-78486",
+                "price": 240.73
+              }
+            ]
+          }
+        }
+      },
+      "Ho Chi Minh City Production Center": {
+        "country": "Vietnam",
+        "suppliers": {
+          "Rodriguez Inc": {
+            "risk_score": 0.56,
+            "revenue": 89597120.01,
+            "products": [
+              {
+                "name": "Servo Controller 9054",
+                "sku": "E-52489",
+                "price": 1025.46
+              }
+            ]
+          },
+          "Savage Inc": {
+            "risk_score": 0.32,
+            "revenue": 35994003.93,
+            "products": [
+              {
+                "name": "Engine Control Unit 9489",
+                "sku": "A-12318",
+                "price": 345.55
+              },
+              {
+                "name": "Power Supply Unit 1852",
+                "sku": "E-8684",
+                "price": 1141.1
+              },
+              {
+                "name": "Lithium-Ion Cell Pack 7885",
+                "sku": "E-36206",
+                "price": 3840.34
+              }
+            ]
+          },
+          "Chavez Inc": {
+            "risk_score": 0.61,
+            "revenue": 74646696.07,
+            "products": [
+              {
+                "name": "Stainless Steel Fastener Kit 8262",
+                "sku": "I-82437",
+                "price": 1765.71
+              }
+            ]
+          }
+        }
+      },
+      "Bangkok Manufacturing Facility": {
+        "country": "Thailand",
+        "suppliers": {
+          "Williams-Scott": {
+            "risk_score": 0.22,
+            "revenue": 902326117.24,
+            "products": [
+              {
+                "name": "Cold Chain Vaccine Carrier 9085",
+                "sku": "P-1383",
+                "price": 948.96
+              }
+            ]
+          },
+          "Davis PLC": {
+            "risk_score": 0.68,
+            "revenue": 724773566.95,
+            "products": [
+              {
+                "name": "Transmission Gear Set 9591",
+                "sku": "A-15164",
+                "price": 1046.21
+              },
+              {
+                "name": "Steering Column Module 8114",
+                "sku": "A-99432",
+                "price": 1237.45
+              },
+              {
+                "name": "Pressure Relief Valve 7229",
+                "sku": "I-62569",
+                "price": 3017.02
+              }
+            ]
+          },
+          "Frank, Vazquez and Davis": {
+            "risk_score": 0.32,
+            "revenue": 582227475.84,
+            "products": [
+              {
+                "name": "Fuel Injection Pump 1325",
+                "sku": "A-7694",
+                "price": 261.43
+              },
+              {
+                "name": "Wind Turbine Bearing 8909",
+                "sku": "E-1404",
+                "price": 2131.07
+              },
+              {
+                "name": "Hydraulic Pump 5371",
+                "sku": "I-83284",
+                "price": 2252.45
+              }
+            ]
+          }
+        }
+      },
+      "London Distribution Center": {
+        "country": "United Kingdom",
+        "suppliers": {
+          "Roberts, Hill and Powers": {
+            "risk_score": 0.06,
+            "revenue": 597707633.59,
+            "products": [
+              {
+                "name": "Fuel Injection Pump 9022",
+                "sku": "A-52076",
+                "price": 287.94
+              },
+              {
+                "name": "Battery Management Module 2396",
+                "sku": "E-41433",
+                "price": 2396.49
+              }
+            ]
+          },
+          "Curtis Inc": {
+            "risk_score": 0.21,
+            "revenue": 553451178.64,
+            "products": [
+              {
+                "name": "Industrial Router 6018",
+                "sku": "E-49424",
+                "price": 1565.77
+              },
+              {
+                "name": "Medical-Grade Nitrile Gloves 6402",
+                "sku": "P-85864",
+                "price": 118.86
+              }
+            ]
+          },
+          "Howell Inc": {
+            "risk_score": 0.04,
+            "revenue": 764039403.74,
+            "products": [
+              {
+                "name": "High-Voltage Cable Harness 5977",
+                "sku": "E-88201",
+                "price": 3122.17
+              },
+              {
+                "name": "Fuel Injection Pump 1895",
+                "sku": "A-80504",
+                "price": 1353.4
+              }
+            ]
+          }
+        }
+      },
+      "Manila Factory": {
+        "country": "Philippines",
+        "suppliers": {
+          "Carter-Bridges": {
+            "risk_score": 0.23,
+            "revenue": 499642169.04,
+            "products": [
+              {
+                "name": "Solar Inverter Unit 669",
+                "sku": "E-88726",
+                "price": 4066.36
+              }
+            ]
+          },
+          "Williams, Valentine and Mendoza": {
+            "risk_score": 0.44,
+            "revenue": 740479692.45,
+            "products": [
+              {
+                "name": "Hydraulic Pump 5909",
+                "sku": "I-40844",
+                "price": 710.78
+              }
+            ]
+          },
+          "Brown-Castro": {
+            "risk_score": 0.39,
+            "revenue": 65749556.18,
+            "products": [
+              {
+                "name": "Printed Circuit Board 3345",
+                "sku": "E-66947",
+                "price": 2487.85
+              },
+              {
+                "name": "Diagnostic Reagent Pack 1432",
+                "sku": "P-51307",
+                "price": 816.93
+              }
+            ]
+          }
+        }
+      },
+      "Port of Singapore": {
+        "country": "Singapore",
+        "suppliers": {
+          "Mullins Inc": {
+            "risk_score": 0.95,
+            "revenue": 425170893.64,
+            "products": [
+              {
+                "name": "Conveyor Belt Roll 9263",
+                "sku": "I-44387",
+                "price": 137.58
+              },
+              {
+                "name": "Medical-Grade Nitrile Gloves 1714",
+                "sku": "P-55773",
+                "price": 606.46
+              }
+            ]
+          },
+          "Martinez, Horton and Anderson": {
+            "risk_score": 0.61,
+            "revenue": 445373459.37,
+            "products": [
+              {
+                "name": "CNC Spindle Motor 7793",
+                "sku": "I-94255",
+                "price": 1873.54
+              },
+              {
+                "name": "Corrugated Shipping Carton 7900",
+                "sku": "P-41373",
+                "price": 45.3
+              }
+            ]
+          },
+          "Peters, Shaffer and Moore": {
+            "risk_score": 0.39,
+            "revenue": 360812297.73,
+            "products": [
+              {
+                "name": "Wiring Harness 4294",
+                "sku": "A-44138",
+                "price": 1293.45
+              }
+            ]
+          }
+        }
+      },
+      "Guangzhou Production Center": {
+        "country": "China",
+        "suppliers": {
+          "Kline, Allen and Rogers": {
+            "risk_score": 0.45,
+            "revenue": 367224732.48,
+            "products": [
+              {
+                "name": "Corrugated Shipping Carton 572",
+                "sku": "P-18200",
+                "price": 334.18
+              },
+              {
+                "name": "Industrial Router 2220",
+                "sku": "E-96507",
+                "price": 455.94
+              },
+              {
+                "name": "Surgical Mask Carton 4477",
+                "sku": "P-69015",
+                "price": 801.67
+              }
+            ]
+          }
+        }
+      },
+      "Amsterdam Logistics Hub": {
+        "country": "Netherlands",
+        "suppliers": {
+          "Boyer Ltd": {
+            "risk_score": 0.35,
+            "revenue": 413826510.8,
+            "products": [
+              {
+                "name": "CNC Spindle Motor 5616",
+                "sku": "I-70219",
+                "price": 3195.97
+              },
+              {
+                "name": "Insulated Shipping Box 9126",
+                "sku": "P-84948",
+                "price": 87.5
+              }
+            ]
+          }
+        }
+      },
+      "Dubai Port": {
+        "country": "United Arab Emirates",
+        "suppliers": {
+          "Williams and Sons": {
+            "risk_score": 0.46,
+            "revenue": 863757901.58,
+            "products": [
+              {
+                "name": "Pressure Relief Valve 7944",
+                "sku": "I-12851",
+                "price": 2711.36
+              },
+              {
+                "name": "Diagnostic Reagent Pack 4583",
+                "sku": "P-13197",
+                "price": 480.78
+              }
+            ]
+          }
+        }
+      },
+      "Mumbai Warehouse": {
+        "country": "India",
+        "suppliers": {
+          "Grant-Fitzgerald": {
+            "risk_score": 0.28,
+            "revenue": 984227325.47,
+            "products": [
+              {
+                "name": "Stainless Steel Fastener Kit 6124",
+                "sku": "I-37091",
+                "price": 817.74
+              }
+            ]
+          }
+        }
+      },
+      "Chicago Warehouse": {
+        "country": "United States",
+        "suppliers": {
+          "Hill, Russell and Hill": {
+            "risk_score": 0.54,
+            "revenue": 599949745.37,
+            "products": [
+              {
+                "name": "Ball Bearing Set 1077",
+                "sku": "I-39865",
+                "price": 827.19
+              },
+              {
+                "name": "Label Stock Roll 8699",
+                "sku": "P-90591",
+                "price": 45.1
+              },
+              {
+                "name": "Transmission Gear Set 9417",
+                "sku": "A-67865",
+                "price": 240.99
+              }
+            ]
+          },
+          "Ford-Terry": {
+            "risk_score": 0.5,
+            "revenue": 429179315.33,
+            "products": [
+              {
+                "name": "Diagnostic Reagent Pack 2680",
+                "sku": "P-67946",
+                "price": 675.74
+              }
+            ]
+          }
+        }
+      },
+      "Rotterdam Port": {
+        "country": "Netherlands",
+        "suppliers": {
+          "Cameron, Wyatt and Johnson": {
+            "risk_score": 0.88,
+            "revenue": 49459639.7,
+            "products": [
+              {
+                "name": "Industrial Router 3506",
+                "sku": "E-10299",
+                "price": 1396.41
+              }
+            ]
+          },
+          "Watson, Stephens and Davis": {
+            "risk_score": 0.77,
+            "revenue": 829516053.49,
+            "products": [
+              {
+                "name": "Ball Bearing Set 8329",
+                "sku": "I-8588",
+                "price": 2087.58
+              },
+              {
+                "name": "Battery Management Module 5920",
+                "sku": "E-86808",
+                "price": 1819.74
+              }
+            ]
+          }
+        }
+      },
+      "Los Angeles Port": {
+        "country": "United States",
+        "suppliers": {
+          "Benitez-Donaldson": {
+            "risk_score": 0.68,
+            "revenue": 480775934.43,
+            "products": [
+              {
+                "name": "Pallet Wrap Film 3609",
+                "sku": "P-54074",
+                "price": 179.07
+              },
+              {
+                "name": "Hydraulic Pump 8972",
+                "sku": "I-1369",
+                "price": 1392.21
+              }
+            ]
+          },
+          "Williams Ltd": {
+            "risk_score": 0.7,
+            "revenue": 328689891.97,
+            "products": [
+              {
+                "name": "Battery Management Module 9488",
+                "sku": "E-82858",
+                "price": 1724.78
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "runs": [
+    {
+      "run_id": 1,
+      "name": "Run 1: Standard Regional Disruption (Baseline Multi-Hop Traversal)",
+      "query": "Assess the impact of a strike (geopolitical risk, strike, riots, etc.) at all Hamburg locations on our supply chain. List every affected location, supplier (with risk score & revenue), and downstream product (with SKU & price). FYI: my print out viewing window is very small, so please make it easy to read.",
+      "status": "success",
+      "duration_sec": 12.25,
+      "total_messages": 4,
+      "tool_calls": [
+        {
+          "name": "analyze_location_blast_radius",
+          "args": {
+            "location_or_country_query": "Hamburg",
+            "risk_threshold": 0.6
+          }
+        }
+      ],
+      "models_routed": [
+        "nvidia/nemotron-3.5-lightning:free",
+        "recursive/flint-v1.0:free"
+      ],
+      "step_timings": [
+        {
+          "step": 2,
+          "role": "AI",
+          "model": "nvidia/nemotron-3.5-lightning:free",
+          "elapsed": 2.12,
+          "tool_calls": 1
+        },
+        {
+          "step": 3,
+          "role": "Tool",
+          "elapsed": 0.0
+        },
+        {
+          "step": 4,
+          "role": "AI",
+          "model": "recursive/flint-v1.0:free",
+          "elapsed": 10.13,
+          "tool_calls": 0
+        }
+      ],
+      "final_answer": "# \u26a0\ufe0f STRIKE IMPACT ASSESSMENT \u2013 HAMBURG\n**Risk Threshold: 0.6 (HIGH RISK)**\n\n---\n\n## SUMMARY METRICS\n| Metric | Value |\n|---|---|\n| Locations Affected | **1** |\n| Suppliers Affected | **1** |\n| High-Risk Suppliers | **1** |\n| Products Affected | **1** |\n| Total Supplier Revenue Exposed | **$239,183,449.32** |\n| High-Risk Supplier Revenue Exposed | **$239,183,449.32** |\n| Risk-Weighted Revenue Exposure | **$157,861,076.55** |\n\n---\n\n## AFFECTED LOCATION\n- **Port of Hamburg** (Germany)\n- Suppliers at this location: **1**\n\n---\n\n## AFFECTED SUPPLIER\n- **Moran-Webb**\n- Risk Score: **0.66** \u2192 **HIGH RISK**\n- Revenue Exposed: **$239,183,449.32**\n\n---\n\n## DOWNSTREAM PRODUCTS AFFECTED\n- **Fuel Injection Pump 4000**\n- SKU: **A-37152**\n- Price: **$355.68**\n\n---\n\n## KEY TAKEAWAY\nThe strike at **Port of Hamburg** is impacting **1 supplier (Moran-Webb)** with a high-risk score of **0.66**, exposing **$239.18M** in revenue (risk-weighted: **$157.86M**). This single supplier produces **1 affected product** (Fuel Injection Pump 4000, SKU A-37152, $355.68).\n\n**Bottom line:** Full supply chain disruption detected at Hamburg port \u2014 high financial exposure with limited product-level granularity in the current blast radius."
+    },
+    {
+      "run_id": 2,
+      "name": "Run 2: Misspelled / Fuzzy Entity + Multi-Location Country Aggregation",
+      "query": "We have a major customs freeze across all ports and facilities in Chna (especially shanghia and shenzen). Identify all affected locations, their suppliers, the exact products at risk, and calculate the total supplier revenue exposed.",
+      "status": "success",
+      "duration_sec": 31.98,
+      "total_messages": 4,
+      "tool_calls": [
+        {
+          "name": "analyze_location_blast_radius",
+          "args": {
+            "location_or_country_query": "China",
+            "risk_threshold": 0.6
+          }
+        }
+      ],
+      "models_routed": [
+        "dots-studio/dots-3-note-preview:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "step_timings": [
+        {
+          "step": 2,
+          "role": "AI",
+          "model": "dots-studio/dots-3-note-preview:free",
+          "elapsed": 3.61,
+          "tool_calls": 1
+        },
+        {
+          "step": 3,
+          "role": "Tool",
+          "elapsed": 0.0
+        },
+        {
+          "step": 4,
+          "role": "AI",
+          "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "elapsed": 28.37,
+          "tool_calls": 0
+        }
+      ],
+      "final_answer": "# \ud83d\udea8 **CUSTOMS FREEZE IMPACT ANALYSIS: CHINA (Shanghai & Shenzhen Focus)**\n\n## **Executive Summary**\nA customs freeze across all Chinese ports and facilities exposes **$2.83 billion** in total supplier revenue across **3 locations**, **4 suppliers**, and **10 products**. **1 supplier is HIGH RISK** (Chapman Ltd at Shanghai Port), representing **$948.15M** in high-risk exposure.\n\n---\n\n## **\ud83d\udcca Deterministic Financial Exposure (Exact Figures)**\n\n| Metric | Value |\n|--------|-------|\n| **Total Supplier Revenue Exposed** | **$2,831,125,219.15** |\n| **High-Risk Supplier Revenue Exposed** | **$948,150,329.26** |\n| **Risk-Weighted Revenue Exposure** | **$1,466,925,849.98** |\n| **Total Locations Affected** | 3 |\n| **Total Suppliers Affected** | 4 |\n| **High-Risk Suppliers** | 1 |\n| **Total Products at Risk** | 10 |\n\n---\n\n## **\ud83c\udfed Affected Locations & Complete Supplier/Product Breakdown**\n\n### **1. Shanghai Port** (Primary \"shanghia\" impact zone)\n**2 Suppliers | 5 Products | $1,804,566,031.12 Revenue Exposed**\n\n| Supplier | Risk Score | Risk Level | Revenue | Products Manufactured |\n|----------|------------|------------|---------|----------------------|\n| **Chapman Ltd** | **0.78** | **\ud83d\udd34 HIGH_RISK** | **$948,150,329.26** | \u2022 Battery Management Module 9398 (E-9142) - $1,370.23<br>\u2022 Steering Column Module 4234 (A-56491) - $165.86 |\n| Mcpherson-Burns | 0.41 | \ud83d\udfe1 MODERATE_OR_LOW_RISK | $856,415,701.86 | \u2022 Hydraulic Pump 8943 (I-36559) - $2,160.26<br>\u2022 Hydraulic Pump 5524 (I-58144) - $2,807.26<br>\u2022 Diagnostic Reagent Pack 3061 (P-78486) - $240.73 |\n\n---\n\n### **2. Hong Kong Port** (Major transshipment hub)\n**1 Supplier | 2 Products | $659,334,455.55 Revenue Exposed**\n\n| Supplier | Risk Score | Risk Level | Revenue | Products Manufactured |\n|----------|------------|------------|---------|----------------------|\n| Robinson, White and Carpenter | 0.32 | \ud83d\udfe1 MODERATE_OR_LOW_RISK | $659,334,455.55 | \u2022 Lithium-Ion Cell Pack 4671 (E-77770) - $4,850.02<br>\u2022 Transmission Gear Set 2721 (A-88980) - $1,496.67 |\n\n---\n\n### **3. Guangzhou Production Center** (Near \"shenzen\" / Shenzhen region)\n**1 Supplier | 3 Products | $367,224,732.48 Revenue Exposed**\n\n| Supplier | Risk Score | Risk Level | Revenue | Products Manufactured |\n|----------|------------|------------|---------|----------------------|\n| Kline, Allen and Rogers | 0.45 | \ud83d\udfe1 MODERATE_OR_LOW_RISK | $367,224,732.48 | \u2022 Corrugated Shipping Carton 572 (P-18200) - $334.18<br>\u2022 Industrial Router 2220 (E-96507) - $455.94<br>\u2022 Surgical Mask Carton 4477 (P-69015) - $801.67 |\n\n---\n\n## **\u26a0\ufe0f Critical Risk Assessment**\n\n### **\ud83d\udd34 IMMEDIATE ACTION REQUIRED: Chapman Ltd (Shanghai Port)**\n- **Risk Score: 0.78** (exceeds 0.6 threshold)\n- **$948.15M revenue at stake** \u2014 33.5% of total exposure\n- **Products**: Battery Management Modules (EV/energy storage) + Steering Column Modules (automotive)\n- **Impact**: Production line stoppages for EV battery systems and automotive steering assemblies\n\n### **\ud83d\udfe1 ELEVATED MONITORING: Mcpherson-Burns (Shanghai Port)**\n- **Risk Score: 0.41** \u2014 moderate but significant revenue ($856.4M)\n- **Products**: Hydraulic pumps (industrial) + Diagnostic reagents (pharmaceutical/medical)\n- **Dual-sector exposure** increases systemic risk\n\n### **\ud83d\udfe1 STANDARD MONITORING: Remaining 2 Suppliers**\n- Robinson, White and Carpenter (Hong Kong): $659.3M \u2014 Electronics/Automotive\n- Kline, Allen and Rogers (Guangzhou): $367.2M \u2014 Packaging/Electronics/Medical\n\n---\n\n## **\ud83c\udfaf Strategic Recommendations**\n\n1. **Activate contingency sourcing for Chapman Ltd products immediately** \u2014 Battery Management Modules & Steering Columns are single-sourced from a HIGH_RISK supplier in the freeze zone.\n\n2. **Expedite customs documentation for Mcpherson-Burns** \u2014 Hydraulic pumps and diagnostic reagents have medical/industrial criticality; prioritize clearance.\n\n3. **Reroute Hong Kong Port shipments** \u2014 Robinson, White and Carpenter's lithium-ion cells and transmission gears may clear via alternative ports if Hong Kong is frozen.\n\n4. **Validate Guangzhou/Shenzhen logistics corridors** \u2014 Kline, Allen and Rogers' surgical masks and industrial routers may face secondary delays from Shenzhen-adjacent restrictions.\n\n5. **Risk-weighted exposure of $1.47B** should trigger board-level supply chain resilience review and insurance notification.\n\n---\n\n**Analysis Methodology**: GraphRAG 2-hop traversal (Location \u2192 Supplier \u2192 Product) with deterministic Python calculation. All figures are exact from knowledge graph \u2014 no estimates or mental math."
+    },
+    {
+      "run_id": 3,
+      "name": "Run 3: Reverse Product-to-Location High-Risk Audit (Upstream Traversal)",
+      "query": "Find our Pharmaceutical or medical products (like syringes, gloves, masks, or vaccine carriers), check which suppliers manufacture them, identify where those suppliers are located, and flag any supplier with risk_score > 0.6.",
+      "status": "success",
+      "duration_sec": 22.8,
+      "total_messages": 4,
+      "tool_calls": [
+        {
+          "name": "audit_products_and_upstream_suppliers",
+          "args": {
+            "product_query": "medical products",
+            "risk_threshold": 0.6
+          }
+        }
+      ],
+      "models_routed": [
+        "cohere/north-mini-code:free",
+        "recursive/flint-v1.0:free"
+      ],
+      "step_timings": [
+        {
+          "step": 2,
+          "role": "AI",
+          "model": "cohere/north-mini-code:free",
+          "elapsed": 2.74,
+          "tool_calls": 1
+        },
+        {
+          "step": 3,
+          "role": "Tool",
+          "elapsed": 0.0
+        },
+        {
+          "step": 4,
+          "role": "AI",
+          "model": "recursive/flint-v1.0:free",
+          "elapsed": 20.05,
+          "tool_calls": 0
+        }
+      ],
+      "final_answer": "# Pharmaceutical & Medical Products Supply Chain Risk Report\n\n## Executive Summary\n\nThe audit of **Pharmaceutical / Medical Products** (including syringes, gloves, masks, vaccine carriers, and related medical supplies) identified **14 matching products** manufactured by **13 unique suppliers** across the network.\n\n### Key Deterministic Metrics\n| Metric | Value |\n|---|---|\n| Total Matching Products | **14** |\n| Total Unique Suppliers | **13** |\n| High-Risk Suppliers (score > 0.6) | **2** |\n| Low-Risk Suppliers (score \u2264 0.6) | **11** |\n| **Total Supplier Revenue Exposed** | **$6,696,311,692.64** |\n| **High-Risk Supplier Revenue Exposed** | **$542,523,658.91** |\n\n---\n\n## \ud83d\udea8 HIGH-RISK SUPPLIERS FLAGGED (risk_score > 0.6)\n\n### 1. Mullins Inc \u2014 \ud83d\udd34 CRITICAL\n- **Risk Score:** **0.95** (HIGH_RISK)\n- **Revenue Exposure:** **$425,170,893.64**\n- **Location:** Port of Singapore, **Singapore**\n- **Affected Product:** Medical-Grade Nitrile Gloves 1714 (SKU: P-55773, $606.46/unit)\n\n### 2. Allen, Ballard and Henderson \u2014 \ud83d\udd34 HIGH\n- **Risk Score:** **0.85** (HIGH_RISK)\n- **Revenue Exposure:** **$117,352,765.27**\n- **Location:** Amsterdam Warehouse, **Netherlands**\n- **Affected Product:** Surgical Mask Carton 7967 (SKU: P-94622, $733.31/unit)\n\n**Combined High-Risk Exposure: $542,523,658.91** across two critical suppliers.\n\n---\n\n## \u2705 LOW-RISK SUPPLIERS (risk_score \u2264 0.6)\n\n| Supplier | Risk Score | Flag | Revenue Exposure | Location | Affected Products |\n|---|---|---|---|---|---|\n| Ford-Terry | 0.50 | LOW | $429,179,315.33 | Chicago Warehouse, **United States** | Diagnostic Reagent Pack 2680 (SKU: P-67946) |\n| Ford, Johnson and Ward | 0.46 | LOW | $857,193,848.22 | Tokyo Logistics Hub, **Japan** | Cold Chain Vaccine Carrier 3585 (SKU: P-71022); Active Pharmaceutical Ingredient 428 (SKU: P-12374) |\n| Williams and Sons | 0.46 | LOW | $863,757,901.58 | Dubai Port, **United Arab Emirates** | Diagnostic Reagent Pack 4583 (SKU: P-13197) |\n| Kline, Allen and Rogers | 0.45 | LOW | $367,224,732.48 | Guangzhou Production Center, **China** | Surgical Mask Carton 4477 (SKU: P-69015) |\n| Mcpherson-Burns | 0.41 | LOW | $856,415,701.86 | Shanghai Port, **China** | Diagnostic Reagent Pack 3061 (SKU: P-78486) |\n| Brown-Castro | 0.39 | LOW | $65,749,556.18 | Manila Factory, **Philippines** | Diagnostic Reagent Pack 1432 (SKU: P-51307) |\n| Woods, Hicks and Maldonado | 0.34 | LOW | $483,114,025.91 | S\u00e3o Paulo Warehouse, **Brazil** | Cold Chain Vaccine Carrier 138 (SKU: P-24613) |\n| Knapp-Norris | 0.28 | LOW | $10,882,673.31 | Singapore Port, **Singapore** | Active Pharmaceutical Ingredient 710 (SKU: P-48285) |\n| Cochran PLC | 0.23 | LOW | $764,492,982.98 | Tokyo Logistics Hub, **Japan** | Medical-Grade Nitrile Gloves 8857 (SKU: P-77850) |\n| Williams-Scott | 0.22 | LOW | $902,326,117.24 | Bangkok Manufacturing Facility, **Thailand** | Cold Chain Vaccine Carrier 9085 (SKU: P-1383) |\n| Curtis Inc | 0.21 | LOW | $553,451,178.64 | London Distribution Center, **United Kingdom** | Medical-Grade Nitrile Gloves 6402 (SKU: P-85864) |\n\n---\n\n## \ud83d\udccb Product \u2192 Supplier \u2192 Location Mapping (All 14 Products)\n\n| Product | SKU | Supplier | Risk Score | Location | Revenue |\n|---|---|---|---|---|---|\n| Medical-Grade Nitrile Gloves 1714 | P-55773 | Mullins Inc | **0.95** \ud83d\udd34 | Port of Singapore, Singapore | $425,170,893.64 |\n| Surgical Mask Carton 7967 | P-94622 | Allen, Ballard and Henderson | **0.85** \ud83d\udd34 | Amsterdam Warehouse, Netherlands | $117,352,765.27 |\n| Diagnostic Reagent Pack 2680 | P-67946 | Ford-Terry | 0.50 | Chicago Warehouse, United States | $429,179,315.33 |\n| Cold Chain Vaccine Carrier 3585 | P-71022 | Ford, Johnson and Ward | 0.46 | Tokyo Logistics Hub, Japan | $857,193,848.22 |\n| Active Pharmaceutical Ingredient 428 | P-12374 | Ford, Johnson and Ward | 0.46 | Tokyo Logistics Hub, Japan | $857,193,848.22 |\n| Diagnostic Reagent Pack 4583 | P-13197 | Williams and Sons | 0.46 | Dubai Port, UAE | $863,757,901.58 |\n| Surgical Mask Carton 4477 | P-69015 | Kline, Allen and Rogers | 0.45 | Guangzhou Production Center, China | $367,224,732.48 |\n| Diagnostic Reagent Pack 3061 | P-78486 | Mcpherson-Burns | 0.41 | Shanghai Port, China | $856,415,701.86 |\n| Diagnostic Reagent Pack 1432 | P-51307 | Brown-Castro | 0.39 | Manila Factory, Philippines | $65,749,556.18 |\n| Cold Chain Vaccine Carrier 138 | P-24613 | Woods, Hicks and Maldonado | 0.34 | S\u00e3o Paulo Warehouse, Brazil | $483,114,025.91 |\n| Active Pharmaceutical Ingredient 710 | P-48285 | Knapp-Norris | 0.28 | Singapore Port, Singapore | $10,882,673.31 |\n| Medical-Grade Nitrile Gloves 8857 | P-77850 | Cochran PLC | 0.23 | Tokyo Logistics Hub, Japan | $764,492,982.98 |\n| Cold Chain Vaccine Carrier 9085 | P-1383 | Williams-Scott | 0.22 | Bangkok Manufacturing Facility, Thailand | $902,326,117.24 |\n| Medical-Grade Nitrile Gloves 6402 | P-85864 | Curtis Inc | 0.21 | London Distribution Center, United Kingdom | $553,451,178.64 |\n\n---\n\n## \ud83c\udfaf Risk Flag Summary\n\n- **Suppliers flagged HIGH RISK (score > 0.6):** **2 out of 13** suppliers\n  - Mullins Inc (0.95) \u2014 gloves \u2014 Port of Singapore\n  - Allen, Ballard and Henderson (0.85) \u2014 masks \u2014 Amsterdam Warehouse\n- **Total exposed revenue at high risk:** **$542,523,658.91**\n- **Total medical product supply exposure:** **$6,696,311,692.64**\n\n## \u26a0\ufe0f Strategic Implications\n1. **Critical exposure** is concentrated in the **gloves** and **surgical mask** segments.\n2. The **Port of Singapore** and **Amsterdam Warehouse** represent the highest-priority geographic risk nodes for medical supply continuity.\n3. All other suppliers are currently operating below the high-risk threshold, but warrant ongoing monitoring."
+    }
+  ]
+}

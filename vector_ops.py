@@ -59,7 +59,7 @@ class ProductVectorStore:
         ids = []
         documents = []
         metadatas = []
-        for product in products:
+        for product in set(products):
             ids.append(product.sku)
             documents.append(product.name)
             metadatas.append({
@@ -177,7 +177,7 @@ class SupplierVectorStore:
         ids = []
         documents = []
         metadatas = []
-        for supplier in suppliers:
+        for supplier in set(suppliers):
             # Use supplier name as unique ID
             ids.append(supplier.name)
             documents.append(supplier.name)  # Embed the name for semantic search

@@ -22,7 +22,7 @@ Generated 29 locations, 61 suppliers, 125 products
 For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
 
 ============================================================
-AGENT CONVERSATION FLOW
+AGENT REASONING AND TOOL CALLING FLOW
 ============================================================
 
 Total messages: 18

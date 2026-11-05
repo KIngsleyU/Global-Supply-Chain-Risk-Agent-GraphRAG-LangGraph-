@@ -25,30 +25,21 @@ Example:
     >>> location = Location(name="Port of Los Angeles", country="United States")
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-@dataclass
+@dataclass(frozen=True)
 class Supplier:
     name: str
-    risk_score: float
-    revenue: float
-    # We add a unique ID helper for the graph
-    def __hash__(self):
-        return hash(self.name)
+    risk_score: float = field(compare=False)
+    revenue: float = field(compare=False)
 
-@dataclass
+@dataclass(frozen=True)
 class Product:
-    name: str
+    name: str = field(compare=False)
     sku: str
-    price: float
-    # We add a unique ID helper for the graph (SKU should be unique)
-    def __hash__(self):
-        return hash(self.sku)
+    price: float = field(compare=False)
 
-@dataclass
+@dataclass(frozen=True)
 class Location:
     name: str
-    country: str  # Added the missing 'str' type hint
-    # We add a unique ID helper for the graph
-    def __hash__(self):
-        return hash((self.name, self.country))
+    country: str

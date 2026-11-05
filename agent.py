@@ -54,6 +54,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from dotenv import load_dotenv
 import os
 import subprocess
+import sys
 import tempfile
 
 # Fix tokenizer warning about parallelism after forking
@@ -235,7 +236,7 @@ def launch_risk_map_ui(risk_threshold: float = 0.6):
         env["SC_GRAPH_DOT_PATH"] = dot_file
         env["SC_GRAPH_THRESHOLD"] = str(risk_threshold)
 
-        subprocess.Popen(["streamlit", "run", "app.py"], env=env)
+        subprocess.Popen([sys.executable, "-m", "streamlit", "run", "app.py"], env=env)
         return (
             "Launched Global Supply Chain Risk Map at http://localhost:8501 "
             f"(rendering graph snapshot from {dot_file})"
@@ -280,7 +281,8 @@ if not api_key:
 model_name = os.getenv(
     "OPENROUTER_MODEL", 
     # "google/gemini-2.0-flash-exp:free",
-    "z-ai/glm-4.5-air:free")
+    # "z-ai/glm-4.5-air:free",
+    "openrouter/free")
 llm = ChatOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=api_key,

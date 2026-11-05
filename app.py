@@ -55,8 +55,6 @@ def load_graph():
     graph_db.generate_data()
     return graph_db
 
-graph_db = load_graph()
-
 # 3. Sidebar Controls
 risk_threshold = st.sidebar.slider("Risk Threshold", 0.0, 1.0, 0.6)
 
@@ -70,6 +68,7 @@ if dot_path and os.path.exists(dot_path):
     st.graphviz_chart(dot_source, use_container_width=True)
     st.caption(f"Rendering graph snapshot from agent.py ({dot_path})")
 else:
+    graph_db = load_graph()
     dot = build_supply_chain_graphviz(graph_db, risk_threshold=risk_threshold)
     st.graphviz_chart(dot, use_container_width=True)
 

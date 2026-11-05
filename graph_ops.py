@@ -167,8 +167,9 @@ class SupplyChainGraph:
             country = country_mapping.get(city, self.faker.country())
             
             location = Location(name=location_name, country=country)
-            self.add_node(location)
-            locations.append(location)
+            if location not in locations:
+                self.add_node(location)
+                locations.append(location)
         
         return locations
     
@@ -187,9 +188,9 @@ class SupplyChainGraph:
             # generate 1-3 suppliers for each location
             for _ in range(random.randint(1, 3)):
                 supplier = Supplier(
-                    name=self.faker.company(), 
+                    name=self.faker.unique.company(), 
                     risk_score=round(random.uniform(0, 1), 2), 
-                    revenue=round(random.uniform(100000, 10000000), 2))
+                    revenue=round(random.uniform(100000, 1000000000), 2))
                 self.suppliers.append(supplier)
                 self.add_node(supplier) # type: Supplier ignore
                 self.add_edge(supplier, location, "LOCATED_AT") # type: Supplier ignore
